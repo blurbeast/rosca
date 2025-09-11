@@ -2,12 +2,11 @@ import { config } from "@/lib/config";
 import "@rainbow-me/rainbowkit/styles.css";
 import { Alchemy, Network } from "alchemy-sdk";
 import { createPublicClient, http } from "viem";
-import { shape, shapeSepolia } from "viem/chains";
+import { somniaTestnet } from "viem/chains";
 
 export const alchemy = new Alchemy({
   apiKey: config.alchemyKey,
-  network:
-    config.chainId === shape.id ? Network.SHAPE_MAINNET : Network.SHAPE_SEPOLIA,
+  network: config.chainId === somniaTestnet.id ? ,
 });
 
 export function rpcClient() {

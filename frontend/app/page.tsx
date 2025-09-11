@@ -1,32 +1,32 @@
-import { ArtiFusionHero } from "@/components/artifusion-hero"
-import { ArtiFusionFeatures } from "@/components/artifusion-features"
-import { ArtiFusionStats } from "@/components/artifusion-stats"
-import { ArtiFusionTestimonials } from "@/components/artifusion-testimonials"
-import { ArtiFusionCTA } from "@/components/artifusion-cta"
+import { RoscaHero } from "@/components/rosca-hero"
+import { RoscaFeatures } from "@/components/rosca-features"
+import { RoscaStats } from "@/components/rosca-stats"
+import { RoscaTestimonials } from "@/components/rosca-testimonials"
+import { RoscaCTA } from "@/components/rosca-cta"
 import { AnimatedSection } from "@/components/animated-section"
 
-export default function ArtiFusionLanding() {
+export default function RoscaLanding() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="relative z-10">
         <main className="max-w-7xl mx-auto relative">
-          <ArtiFusionHero />
+          <RoscaHero />
         </main>
 
         <AnimatedSection className="relative z-10 max-w-7xl mx-auto px-6 mt-16" delay={0.1}>
-          <ArtiFusionStats />
+          <RoscaStats />
         </AnimatedSection>
 
         <AnimatedSection className="relative z-10 max-w-7xl mx-auto mt-16" delay={0.2}>
-          <ArtiFusionFeatures />
+          <RoscaFeatures />
         </AnimatedSection>
 
         <AnimatedSection className="relative z-10 max-w-7xl mx-auto mt-16" delay={0.3}>
-          <ArtiFusionTestimonials />
+          <RoscaTestimonials />
         </AnimatedSection>
 
         <AnimatedSection className="relative z-10 max-w-7xl mx-auto mt-16" delay={0.4}>
-          <ArtiFusionCTA />
+          <RoscaCTA />
         </AnimatedSection>
       </div>
     </div>

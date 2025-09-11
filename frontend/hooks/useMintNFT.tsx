@@ -1,4 +1,4 @@
-import { LaunchPadABI } from '@/abi/LaunchPad';
+import { LaunchPadABI } from '@/abi/RoscaSecure';
 import { LAUNCHPAD_CONTRACT_ADDRESS } from '@/lib/config';
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect } from 'react'

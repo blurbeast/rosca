@@ -30,7 +30,7 @@
     /* #ffffff - White popover text */
 
     /* Primary Accent Colors - Electric Purple */
-    --primary: 258 90% 66%;
+    --primary: 207 89% 42%;
     /* #8b5cf6 - Electric purple */
     --primary-foreground: 0 0% 100%;
     /* #ffffff - White text on primary */
@@ -40,12 +40,12 @@
     /* Lighter purple variant */
 
     /* Secondary Accent Colors - Cyan */
-    --secondary: 188 94% 43%;
+    --secondary: 142 76% 36%;
     /* #06b6d4 - Cyan */
     --secondary-foreground: 0 0% 100%;
     /* #ffffff - White text on secondary */
 
-    --accent: 210 40% 98% / 0.1;
+    --accent: 45 93% 47%;
     /* rgba(241, 245, 249, 0.1) - Light accent */
     --accent-foreground: 220 39% 11%;
     /* #0a0b1e - Dark text on accent */

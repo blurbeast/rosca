@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Zap, Shield, Palette } from "lucide-react"
+import { Shield, Users, Coins, TrendingUp } from "lucide-react"
+import Link from "next/link"
 
-export function ArtiFusionHero() {
+export function RoscaHero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center px-6 py-20">
       <div className="absolute inset-0 overflow-hidden">
@@ -13,60 +14,69 @@ export function ArtiFusionHero() {
 
       <div className="relative z-10 text-center max-w-5xl mx-auto">
         <Badge variant="outline" className="mb-6 px-4 py-2 text-sm glassmorphism neon-glow">
-          <Sparkles className="w-4 h-4 mr-2" />
-          Powered by Shape Network
+          <Shield className="w-4 h-4 mr-2" />
+          Powered by Collateral Protection
         </Badge>
 
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-          <span className="holographic-text">ArtiFusion</span>
+          <span className="holographic-text">RoscaSecure</span>
           <br />
-          <span className="text-foreground">Create, Auction, Win</span>
+          <span className="text-foreground">Community Savings Circles</span>
         </h1>
 
         <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
-          The future of no-loss NFT trading. Generate AI-powered NFTs, participate in revolutionary auctions, and launch
-          tokenbound collections on the cutting edge of Web3.
+          Join trusted community savings circles with collateral protection. Save together, support each other,
+          and build financial security through rotating credit associations.
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 mb-10">
           <div className="flex items-center gap-2 glassmorphism px-4 py-2 rounded-full">
-            <Palette className="w-5 h-5 text-primary" />
-            <span className="text-sm">AI-Powered Generation</span>
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="text-sm">Collateral Protected</span>
           </div>
           <div className="flex items-center gap-2 glassmorphism px-4 py-2 rounded-full">
-            <Shield className="w-5 h-5 text-secondary" />
-            <span className="text-sm">No-Loss Auctions</span>
+            <Users className="w-5 h-5 text-secondary" />
+            <span className="text-sm">Community Verified</span>
           </div>
           <div className="flex items-center gap-2 glassmorphism px-4 py-2 rounded-full">
-            <Zap className="w-5 h-5 text-primary" />
-            <span className="text-sm">Tokenbound NFTs</span>
+            <Coins className="w-5 h-5 text-primary" />
+            <span className="text-sm">Transparent Payouts</span>
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" className="px-8 py-4 text-lg neon-glow hover:neon-glow transition-all duration-300">
-            Start Creating
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-8 py-4 text-lg glassmorphism hover:neon-glow-cyan transition-all duration-300 bg-transparent"
-          >
-            Browse Auctions
-          </Button>
+          <Link href="/create-circle">
+            <Button size="lg" className="px-8 py-4 text-lg neon-glow hover:neon-glow transition-all duration-300">
+              Create Circle
+            </Button>
+          </Link>
+          <Link href="/circles">
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 py-4 text-lg glassmorphism hover:neon-glow-cyan transition-all duration-300 bg-transparent"
+            >
+              Browse Circles
+            </Button>
+          </Link>
         </div>
 
         <div className="mt-16 relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[1, 2, 3, 4].map((i) => (
+            {[
+              { title: "Active Circles", value: "247", icon: Users },
+              { title: "Total Saved", value: "$2.4M", icon: TrendingUp },
+              { title: "Success Rate", value: "98.5%", icon: Shield },
+              { title: "Members", value: "15K+", icon: Coins },
+            ].map((stat, i) => (
               <div
                 key={i}
                 className="glassmorphism rounded-xl p-4 hover:neon-glow transition-all duration-300 animate-pulse"
                 style={{ animationDelay: `${i * 200}ms` }}
               >
-                <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg mb-3"></div>
-                <div className="h-3 bg-muted-foreground/20 rounded mb-2"></div>
-                <div className="h-2 bg-muted-foreground/10 rounded w-2/3"></div>
+                <stat.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <div className="text-xs text-muted-foreground">{stat.title}</div>
               </div>
             ))}
           </div>
