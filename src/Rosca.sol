@@ -183,8 +183,8 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         c.token.safeTransferFrom(msg.sender, address(this), totalLock);
 
         // Verify transfer was successful
-        uint256 this_bal_after = c.token.balanceOf(address(this));
-        uint256 received = this_bal_after - before;
+        uint256 thisBalAfter = c.token.balanceOf(address(this));
+        uint256 received = thisBalAfter - before;
         require(received >= totalLock, "token transfer shortfall");
 
         // record member
@@ -409,7 +409,7 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         RoundState storage r = roundStates[circleId][roundId];
         require(!r.settled, "already settled");
 
-        address[] storage mems = membersList[circleId];
+        // address[] storage mems = membersList[circleId];
         uint256 payers = r.depositsMade;
         uint256 pot = c.contributionAmount * payers;
 
