@@ -2,17 +2,17 @@
 pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
-import {Counter} from "../src/Counter.sol";
+import {RoscaSecure} from "../src/Rosca.sol";
 
-contract CounterScript is Script {
-    Counter public counter;
+contract RoscaSecureScript is Script {
+    RoscaSecure public rosca;
 
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
 
-        counter = new Counter();
+        rosca = new RoscaSecure();
 
         vm.stopBroadcast();
     }
