@@ -1,30 +1,30 @@
-import { TrendingUp, Users, Palette, Zap } from "lucide-react"
+import { TrendingUp, Users, Shield, DollarSign } from "lucide-react"
 
-export function ArtiFusionStats() {
+export function RoscaStats() {
   const stats = [
     {
       icon: TrendingUp,
-      value: "10,247",
-      label: "Active Auctions",
-      description: "Live no-loss auctions",
+      value: "847",
+      label: "Active Circles",
+      description: "Ongoing savings groups",
     },
     {
-      icon: Palette,
-      value: "156K+",
-      label: "NFTs Created",
-      description: "AI-generated artworks",
+      icon: DollarSign,
+      value: "$1.2M",
+      label: "Total Saved",
+      description: "Community wealth building",
     },
     {
       icon: Users,
-      value: "23,891",
-      label: "Active Users",
-      description: "Growing community",
+      value: "5,234",
+      label: "Trusted Members",
+      description: "Verified savers",
     },
     {
-      icon: Zap,
-      value: "$2.4M",
-      label: "Volume Traded",
-      description: "Total auction volume",
+      icon: Shield,
+      value: "99.8%",
+      label: "Success Rate",
+      description: "Completed circles",
     },
   ]
 
@@ -32,10 +32,10 @@ export function ArtiFusionStats() {
     <section className="py-16">
       <div className="text-center mb-12">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Powering the Future of <span className="holographic-text">NFT Auctions</span>
+          Building the Future of <span className="holographic-text">Community Savings</span>
         </h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Join thousands of creators and collectors in the revolutionary no-loss auction ecosystem
+          Join thousands of savers in trusted, secure, and transparent rotating savings circles
         </p>
       </div>
 

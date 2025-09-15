@@ -54,7 +54,7 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                                 </Avatar>
                                 <div>
                                     <p className="text-foreground font-medium">{abbreviateHash(address)}</p>
-                                    <p className="text-muted-foreground text-sm">{formatBalance(balance)} ETH</p>
+                                    <p className="text-muted-foreground text-sm">{formatBalance(balance)} STT</p>
                                 </div>
                             </div>
                             <Button
@@ -89,7 +89,7 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                     <div className="flex items-center gap-3">
                         {/* Network Status */}
                         <Badge className={isSomniaNetwork ? "bg-primary/20 text-primary text-sm" : "bg-yellow-500/20 text-yellow-500"}>
-                            {isSomniaNetwork ? "Shape Sepolia" : "Wrong Network"}
+                            {isSomniaNetwork ? "Somnia Testnet" : "Wrong Network"}
                         </Badge>
 
                         {/* Wallet Dropdown */}
@@ -107,19 +107,12 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                                     </Avatar>
                                     <div className="flex flex-col items-center">
                                         <span className="text-sm text-white font-medium">{abbreviateHash(address)}</span>
-                                        <span className="text-xs text-muted-foreground">{formatBalance(balance)} ETH</span>
+                                        <span className="text-xs text-muted-foreground">{formatBalance(balance)} STT</span>
                                     </div>
                                     <ChevronDown className="w-4 h-4 text-white" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="glass-morphism border-primary/20 w-56">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/profile" className="flex items-center gap-2">
-                                        <User className="w-4 h-4" />
-                                        Profile
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-primary/20" />
+                            <DropdownMenuContent className="glass-morphism border-primary/20 w-48">
                                 <DropdownMenuItem onClick={handleDisconnect} className="flex items-center gap-2 text-red-500">
                                     <LogOut className="w-4 h-4" />
                                     Disconnect
@@ -130,7 +123,7 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                 ) : (
                     <Button
                         onClick={openConnectModal}
-                        className="flex items-center gap-2 glass-morphism border-primary/30 text-primary hover:bg-primary/10 bg-transparent"
+                        className="flex items-center gap-2 glass-morphism border-primary/30 text-primary hover:bg-primary/10 hover:text-white bg-transparent"
                         variant="outline"
                     >
                         <Wallet className="w-4 h-4" />

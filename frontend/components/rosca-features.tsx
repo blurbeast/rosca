@@ -1,55 +1,55 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Shield, Zap, Palette, Users, Globe } from "lucide-react"
+import { Sparkles, Shield, Zap, DollarSign, Users, Globe } from "lucide-react"
 
-export function ArtiFusionFeatures() {
+export function RoscaFeatures() {
   const features = [
     {
-      icon: Palette,
-      title: "AI-Powered NFT Generation",
+      icon: Shield,
+      title: "Collateral Protection",
       description:
-        "Transform your ideas into stunning NFTs using advanced AI models. Generate unique artworks from simple text prompts or enhance uploaded images.",
-      badge: "AI Studio",
+        "Your contributions are secured with smart contract collateral. Members must lock additional funds to ensure payment commitments are met.",
+      badge: "Secure",
       gradient: "from-primary/20 to-primary/5",
     },
     {
-      icon: Shield,
-      title: "No-Loss Auction System",
+      icon: DollarSign,
+      title: "Rotating Payouts",
       description:
-        "Revolutionary auction mechanism where participants never lose their investment. Win NFTs or get your bid back - it's that simple.",
-      badge: "Zero Risk",
+        "Fair and transparent payout system where each member receives the full pot in rotation. No favoritism, just mathematical certainty.",
+      badge: "Fair",
       gradient: "from-secondary/20 to-secondary/5",
     },
     {
-      icon: Zap,
-      title: "Tokenbound NFT Launchpad",
+      icon: Users,
+      title: "Community Circles",
       description:
-        "Launch collections with smart contract wallets attached to each NFT. Create utility-rich NFTs that can hold assets and interact with DeFi.",
-      badge: "Advanced",
+        "Join trusted savings groups with friends, family, or verified community members. Build financial cooperation through shared goals.",
+      badge: "Social",
       gradient: "from-primary/20 to-secondary/20",
     },
     {
-      icon: Users,
-      title: "Community-Driven Marketplace",
+      icon: Zap,
+      title: "Instant Settlements",
       description:
-        "Join a thriving ecosystem of creators and collectors. Discover trending collections, follow favorite artists, and build your reputation.",
-      badge: "Social",
+        "Automated smart contract execution ensures instant payouts when your turn comes. No waiting for manual transfers or approvals.",
+      badge: "Automated",
       gradient: "from-secondary/20 to-primary/5",
     },
     {
       icon: Globe,
-      title: "Shape Network Integration",
+      title: "Somnia Network",
       description:
-        "Built on Shape Network for lightning-fast transactions and minimal fees. Seamless Web3 experience with enterprise-grade security.",
+        "Built on Somnia Testnet for fast, secure, and cost-effective transactions. Experience the future of decentralized savings.",
       badge: "Web3",
       gradient: "from-primary/15 to-secondary/15",
     },
     {
       icon: Sparkles,
-      title: "Advanced Analytics",
+      title: "Reputation System",
       description:
-        "Track your portfolio performance, auction success rates, and market trends. Make informed decisions with comprehensive data insights.",
-      badge: "Analytics",
+        "Build your credibility through consistent participation. Higher reputation unlocks access to premium circles and better terms.",
+      badge: "Trust",
       gradient: "from-secondary/20 to-primary/10",
     },
   ]
@@ -62,11 +62,11 @@ export function ArtiFusionFeatures() {
           Platform Features
         </Badge>
         <h2 className="text-3xl md:text-5xl font-bold mb-6">
-          Everything You Need to <span className="holographic-text">Succeed</span>
+          Everything You Need to <span className="holographic-text">Save Together</span>
         </h2>
         <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-          ArtiFusion combines cutting-edge AI technology with innovative auction mechanics to create the ultimate NFT
-          trading platform.
+          RoscaSecure combines traditional community savings wisdom with blockchain security to create the most
+          trusted decentralized savings platform.
         </p>
       </div>
 

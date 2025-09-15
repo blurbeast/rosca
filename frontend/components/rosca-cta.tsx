@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Sparkles, Wallet } from "lucide-react"
+import { ArrowRight, Sparkles, Users } from "lucide-react"
 
-export function ArtiFusionCTA() {
+export function RoscaCTA() {
   return (
     <section className="py-20 px-6">
       <div className="max-w-4xl mx-auto text-center">
@@ -18,25 +18,25 @@ export function ArtiFusionCTA() {
           </Badge>
 
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Join the <span className="holographic-text">Revolution</span>
+            Start Your <span className="holographic-text">Savings Journey</span>
           </h2>
 
           <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
-            Experience the future of NFT trading today. Create stunning AI-generated art, participate in no-loss
-            auctions, and build your digital collection with confidence.
+            Experience the future of community savings today. Join trusted circles, build financial resilience,
+            and achieve your goals with the security of blockchain technology.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button size="lg" className="px-8 py-4 text-lg neon-glow hover:scale-105 transition-all duration-300">
-              <Wallet className="w-5 h-5 mr-2" />
-              Connect Wallet
+              <Users className="w-5 h-5 mr-2" />
+              Create Circle
             </Button>
             <Button
               variant="outline"
               size="lg"
               className="px-8 py-4 text-lg glassmorphism hover:neon-glow-cyan transition-all duration-300 bg-transparent"
             >
-              Explore Platform
+              Browse Circles
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
@@ -44,15 +44,15 @@ export function ArtiFusionCTA() {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>No setup fees</span>
+              <span>No hidden fees</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              <span>Instant transactions</span>
+              <span>Automated payouts</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span>24/7 support</span>
+              <span>Collateral protected</span>
             </div>
           </div>
         </div>

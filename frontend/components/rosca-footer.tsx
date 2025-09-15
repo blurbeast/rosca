@@ -4,18 +4,18 @@ import { Separator } from "@/components/ui/separator"
 import { Twitter, Github, MessageCircle, Mail, Sparkles } from "lucide-react"
 import { AnimatedSection } from "./animated-section"
 
-export function ArtiFusionFooter() {
+export function RoscaFooter() {
   const footerLinks = {
     Platform: [
-      { name: "Create NFTs", href: "#" },
-      { name: "Browse Auctions", href: "#" },
-      { name: "Launch Collection", href: "#" },
-      { name: "Analytics", href: "#" },
+      { name: "Create Circle", href: "/create-circle" },
+      { name: "Browse Circles", href: "/circles" },
+      { name: "My Circles", href: "/my-circles" },
+      { name: "Dashboard", href: "/dashboard" },
     ],
     Resources: [
       { name: "Documentation", href: "#" },
-      { name: "API Reference", href: "#" },
-      { name: "Tutorials", href: "#" },
+      { name: "How it Works", href: "#" },
+      { name: "Safety Guide", href: "#" },
       { name: "FAQ", href: "#" },
     ],
     Community: [
@@ -28,7 +28,7 @@ export function ArtiFusionFooter() {
       { name: "Privacy Policy", href: "#" },
       { name: "Terms of Service", href: "#" },
       { name: "Cookie Policy", href: "#" },
-      { name: "Disclaimer", href: "#" },
+      { name: "Risk Disclosure", href: "#" },
     ],
   }
 
@@ -44,10 +44,10 @@ export function ArtiFusionFooter() {
                 Stay Updated
               </Badge>
               <h3 className="text-2xl font-bold mb-4">
-                Get the Latest <span className="holographic-text">Updates</span>
+                Stay Informed About <span className="holographic-text">Savings</span>
               </h3>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Subscribe to our newsletter for platform updates, new features, and exclusive auction opportunities.
+                Subscribe to our newsletter for platform updates, new circle opportunities, and financial education resources.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
@@ -67,10 +67,10 @@ export function ArtiFusionFooter() {
                   <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-xl font-bold holographic-text">ArtiFusion</span>
+                  <span className="text-xl font-bold holographic-text">RoscaSecure</span>
                 </div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  The future of no-loss NFT trading. Create, auction, and collect with confidence on the Shape Network.
+                  The future of community savings. Join trusted circles, save together, and build financial resilience on Somnia Network.
                 </p>
                 <div className="flex gap-3">
                   <Button variant="outline" size="sm" className="glassmorphism bg-transparent">
@@ -110,12 +110,12 @@ export function ArtiFusionFooter() {
             {/* Bottom Footer */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-muted-foreground text-sm">
-                © 2024 ArtiFusion. All rights reserved. Built on Shape Network.
+                © 2024 RoscaSecure. All rights reserved. Built on Somnia Network.
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Powered by</span>
                 <Badge variant="outline" className="glassmorphism">
-                  Shape Network
+                  Somnia Network
                 </Badge>
               </div>
             </div>

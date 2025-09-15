@@ -2,34 +2,34 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Quote } from "lucide-react"
 
-export function ArtiFusionTestimonials() {
+export function RoscaTestimonials() {
   const testimonials = [
     {
-      name: "Alex Chen",
-      role: "Digital Artist",
+      name: "Maria Rodriguez",
+      role: "Small Business Owner",
       avatar: "/digital-artist-avatar.png",
       content:
-        "ArtiFusion revolutionized how I create and sell my art. The AI generation tools are incredible, and the no-loss auctions mean I can bid confidently on pieces I love.",
+        "RoscaSecure helped me save for my business expansion. The collateral protection gave me confidence, and I built great relationships with my circle members. Saved $5000 in 10 months!",
       rating: 5,
-      badge: "Creator",
+      badge: "Entrepreneur",
     },
     {
-      name: "Sarah Martinez",
-      role: "NFT Collector",
+      name: "David Kim",
+      role: "Software Engineer",
       avatar: "/nft-collector-avatar.png",
       content:
-        "Finally, an auction platform where I don't have to worry about losing money on failed bids. The tokenbound NFTs add so much utility - it's the future of digital ownership.",
+        "As a tech person, I appreciate the transparency of smart contracts. No hidden fees, automatic payouts, and the reputation system ensures everyone stays committed.",
       rating: 5,
-      badge: "Collector",
+      badge: "Tech User",
     },
     {
-      name: "Marcus Johnson",
-      role: "Web3 Developer",
+      name: "Aisha Patel",
+      role: "Community Organizer",
       avatar: "/web3-developer-avatar.png",
       content:
-        "The technical innovation behind ArtiFusion is impressive. Shape Network integration makes transactions seamless, and the smart contract architecture is solid.",
+        "I've organized traditional ROSCAs for years. RoscaSecure brings the same community spirit with modern security. My group loves the automated system and trust features.",
       rating: 5,
-      badge: "Developer",
+      badge: "Organizer",
     },
   ]
 
@@ -41,10 +41,10 @@ export function ArtiFusionTestimonials() {
           Success Stories
         </Badge>
         <h2 className="text-3xl md:text-5xl font-bold mb-6">
-          Loved by <span className="holographic-text">Creators</span> & Collectors
+          Trusted by <span className="holographic-text">Savers</span> & Communities
         </h2>
         <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-          Join thousands of satisfied users who have transformed their NFT experience with ArtiFusion
+          Join thousands of satisfied members who have achieved their savings goals with RoscaSecure
         </p>
       </div>
 
