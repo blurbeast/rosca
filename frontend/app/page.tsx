@@ -1,9 +1,10 @@
-import { RoscaHero } from "@/components/rosca-hero"
+
 import { RoscaFeatures } from "@/components/rosca-features"
 import { RoscaStats } from "@/components/rosca-stats"
 import { RoscaTestimonials } from "@/components/rosca-testimonials"
 import { RoscaCTA } from "@/components/rosca-cta"
 import { AnimatedSection } from "@/components/animated-section"
+import { RoscaHero } from "@/components/rosca-hero"
 
 export default function RoscaLanding() {
   return (

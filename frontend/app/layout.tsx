@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css'
 import { Header } from '@/components/header'
-import { ArtiFusionFooter } from '@/components/artifusion-footer'
+import { RoscaFooter } from '@/components/rosca-footer'
 import { Providers } from '@/contexts/provider'
 import { Toaster } from 'sonner';
 
@@ -17,23 +17,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ArtiFusion - AI-Powered No-Loss NFT Auctions',
-  description: 'Revolutionary NFT platform combining AI-powered creation with no-loss auction mechanics. Generate unique NFTs using AI prompts, participate in risk-free auctions, and launch tokenbound collections on Shape Network.',
+  title: 'RoscaSecure - Decentralized Community Savings Circles',
+  description: 'Secure community savings platform with collateral-protected ROSCA circles. Join trusted savings groups, earn reliable returns, and build financial resilience with blockchain technology on Somnia Network.',
   keywords: [
-    'NFT auction',
-    'AI NFT generation',
-    'no-loss auction',
-    'tokenbound NFT',
-    'Shape Network',
-    'NFT launchpad',
-    'AI art generation',
-    'blockchain auction',
-    'Web3 platform',
-    'NFT marketplace'
+    'ROSCA',
+    'community savings',
+    'collateral protection',
+    'rotating savings',
+    'decentralized finance',
+    'savings circles',
+    'financial cooperation',
+    'blockchain savings',
+    'Web3 finance',
+    'peer-to-peer savings'
   ],
-  authors: [{ name: 'ArtiFusion Team' }],
-  creator: 'ArtiFusion',
-  publisher: 'ArtiFusion',
+  authors: [{ name: 'RoscaSecure Team' }],
+  creator: 'RoscaSecure',
+  publisher: 'RoscaSecure',
 }
 
 export default function RootLayout({
@@ -47,7 +47,7 @@ export default function RootLayout({
         <Providers>
           <Header />
           {children}
-          <ArtiFusionFooter />
+          <RoscaFooter />
           <Toaster position="top-right" richColors />
         </Providers>
       </body>
