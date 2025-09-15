@@ -1,6 +1,6 @@
 export const config = {
-  chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID),
-  alchemyKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,
+  chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 50312,
+  rpcUrl: process.env.NEXT_PUBLIC_RPC_URL as string,
   walletConnectProjectId: process.env
     .NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID as string,
 } as const;
@@ -10,22 +10,23 @@ export const ROSCA_CONTRACT_ADDRESS =
   (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS as `0x${string}`) ||
   "0x1234567890abcdef1234567890abcdef12345678"; // Replace with actual deployed address
 
-// Supported ERC20 tokens for contributions
+// Supported ERC20 tokens for contributions on Somnia Testnet
+// Note: Replace with actual Somnia Testnet token addresses when available
 export const SUPPORTED_TOKENS = {
   USDC: {
-    address: "0xA0b86a33E6417c2A35A16ABDB8aD10b83cB21de0" as `0x${string}`, // Shape Sepolia USDC
+    address: "0xA0b86a33E6417c2A35A16ABDB8aD10b83cB21de0" as `0x${string}`, // Somnia Testnet USDC (placeholder)
     decimals: 6,
     symbol: "USDC",
     name: "USD Coin",
   },
   USDT: {
-    address: "0x2A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B0" as `0x${string}`, // Shape Sepolia USDT
+    address: "0x2A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B0" as `0x${string}`, // Somnia Testnet USDT (placeholder)
     decimals: 6,
     symbol: "USDT",
     name: "Tether USD",
   },
   DAI: {
-    address: "0x3A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B1" as `0x${string}`, // Shape Sepolia DAI
+    address: "0x3A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B1" as `0x${string}`, // Somnia Testnet DAI (placeholder)
     decimals: 18,
     symbol: "DAI",
     name: "Dai Stablecoin",

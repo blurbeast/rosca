@@ -1,22 +1,14 @@
 import { config } from "@/lib/config";
-import "@rainbow-me/rainbowkit/styles.css";
-import { Alchemy, Network } from "alchemy-sdk";
 import { createPublicClient, http } from "viem";
 import { somniaTestnet } from "viem/chains";
 
-export const alchemy = new Alchemy({
-  apiKey: config.alchemyKey,
-  network: config.chainId === somniaTestnet.id ? ,
-});
+// Note: Alchemy doesn't support Somnia Testnet, so we'll use the direct RPC
+// If you need indexing services, consider alternatives like The Graph or Moralis
 
 export function rpcClient() {
-  const chainId = config.chainId;
-  const chain = chainId === shape.id ? shape : shapeSepolia;
-  const rootUrl = chainId === shape.id ? "shape-mainnet" : "shape-sepolia";
-
   return createPublicClient({
-    chain,
-    transport: http(`https://${rootUrl}.g.alchemy.com/v2/${config.alchemyKey}`),
+    chain: somniaTestnet,
+    transport: http(config.rpcUrl),
     batch: {
       multicall: true,
     },

@@ -4,25 +4,16 @@ import { config } from "@/lib/config";
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { http } from "viem";
-import { shape, shapeSepolia } from "viem/chains";
+import { somniaTestnet } from "viem/chains";
 
 export const wagmiConfig = getDefaultConfig({
-  appName: "Artifusion",
+  appName: "RoscaSecure",
   ssr: false,
   projectId: config.walletConnectProjectId,
-  chains: [shape, shapeSepolia],
+  chains: [somniaTestnet],
   transports: {
-    [shape.id]: http(
-      `https://shape-mainnet.g.alchemy.com/v2/${config.alchemyKey}`,
-      {
-        batch: true,
-      }
-    ),
-    [shapeSepolia.id]: http(
-      `https://shape-sepolia.g.alchemy.com/v2/${config.alchemyKey}`,
-      {
-        batch: true,
-      }
-    ),
+    [somniaTestnet.id]: http(config.rpcUrl, {
+      batch: true,
+    }),
   },
 });
