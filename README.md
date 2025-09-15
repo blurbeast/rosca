@@ -5,6 +5,7 @@ RoscaSecure is a blockchain-based ROSCA (Rotating Savings and Credit Association
 ## 🌟 Features
 
 ### Smart Contract (Solidity)
+
 - **Collateral Protection**: Members lock collateral to ensure payment commitments
 - **Rotation-based Payouts**: Deterministic winner selection without randomness
 - **Insurance Pool**: Community fund to handle extreme default scenarios
@@ -13,6 +14,7 @@ RoscaSecure is a blockchain-based ROSCA (Rotating Savings and Credit Association
 - **Admin Controls**: Emergency functions with strict access controls
 
 ### Frontend (Next.js)
+
 - **Modern UI**: Built with Next.js 15, Tailwind CSS, and shadcn/ui components
 - **Web3 Integration**: wagmi + RainbowKit for seamless wallet connections
 - **Somnia Network**: Optimized for fast, low-cost transactions
@@ -35,6 +37,7 @@ RoscaSecure is a blockchain-based ROSCA (Rotating Savings and Credit Association
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Foundry
 - Git
@@ -164,13 +167,6 @@ forge test -vv
 - **Input Validation**: Comprehensive parameter checking
 - **Emergency Functions**: Circuit breakers for extreme cases
 - **Reputation Tracking**: Prevents repeat defaulters
-
-## 📖 Documentation
-
-- Smart contract documentation in [CLAUDE.md](./CLAUDE.md)
-- Frontend component library: [shadcn/ui](https://ui.shadcn.com/)
-- Web3 integration: [wagmi](https://wagmi.sh/)
-- Foundry documentation: [book.getfoundry.sh](https://book.getfoundry.sh/)
 
 ## 🤝 Contributing
 
