@@ -375,9 +375,6 @@ contract RoscaSecureTest is Test {
         joinCircleWithApproval(circleId, alice);
         joinCircleWithApproval(circleId, bob);
         joinCircleWithApproval(circleId, carol);
-
-        // The circle will activate when the 4th member joins, so we can't easily test the "full" condition
-        // Let's just verify the 4th member joins successfully and activates the circle
         joinCircleWithApproval(circleId, dave); // This should activate, not fail
 
         // Verify circle is now active (not full rejection)
@@ -909,13 +906,6 @@ contract RoscaSecureTest is Test {
 
         uint256 pendingPayout = rosca.pendingPayouts(circleId, alice);
         assertEq(pendingPayout, CONTRIBUTION_AMOUNT * 4);
-    }
-
-    function testReentrancyProtection() public pure {
-        // This test would require a malicious token contract to test reentrancy
-        // For now, we trust OpenZeppelin's ReentrancyGuard works correctly
-        // In a full audit, this would need custom malicious contracts
-        assertTrue(true); // Placeholder
     }
 
     function testFuzzCreateCircle(
