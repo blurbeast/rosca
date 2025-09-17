@@ -115,7 +115,7 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         _;
     }
 
-    // // --- Constructor ---
+    // --- Constructor ---
     constructor() Ownable(msg.sender) {}
 
     // // --- Public / External functions ---

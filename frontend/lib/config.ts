@@ -6,9 +6,8 @@ export const config = {
 } as const;
 
 // ROSCA Contract Address
-export const ROSCA_CONTRACT_ADDRESS =
-  (process.env.NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS as `0x${string}`) ||
-  "0x1234567890abcdef1234567890abcdef12345678"; // Replace with actual deployed address
+export const ROSCA_CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS as `0x${string}`; // actual deployed address
 
 // Supported ERC20 tokens for contributions on Somnia Testnet
 // Note: Replace with actual Somnia Testnet token addresses when available

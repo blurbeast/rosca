@@ -47,22 +47,22 @@ export const useCreateCircle = () => {
 
     useEffect(() => {
         if (hash && isConfirming) {
-            toast.loading("Joining circle...", {
-                id: "join-circle",
+            toast.loading("Creating circle...", {
+                id: "create-circle",
                 position: "top-right",
             });
         }
 
         if (isConfirmed && hash) {
-            toast.success("Successfully joined circle!", {
-                id: "join-circle",
+            toast.success("Circle created successfully!", {
+                id: "create-circle",
                 position: "top-right",
             });
         }
 
         if (error) {
             toast.error((error as BaseError).shortMessage || error.message, {
-                id: "join-circle",
+                id: "create-circle",
                 position: "top-right",
             });
         }
@@ -345,22 +345,22 @@ export const useJoinCircle = () => {
 
     useEffect(() => {
         if (hash && isConfirming) {
-            toast.loading("Creating circle...", {
-                id: "create-circle",
+            toast.loading("Joining circle...", {
+                id: "join-circle",
                 position: "top-right",
             });
         }
 
         if (isConfirmed && hash) {
-            toast.success("Circle created successfully!", {
-                id: "create-circle",
+            toast.success("Successfully joined circle!", {
+                id: "join-circle",
                 position: "top-right",
             });
         }
 
         if (error) {
             toast.error((error as BaseError).shortMessage || error.message, {
-                id: "create-circle",
+                id: "join-circle",
                 position: "top-right",
             });
         }
