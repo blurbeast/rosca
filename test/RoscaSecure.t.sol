@@ -73,6 +73,8 @@ contract RoscaSecureTest is Test {
     function createBasicCircle() internal returns (uint256 circleId) {
         address[] memory emptyOrder;
         circleId = rosca.createCircle(
+            "first_circle",
+            "description of the first circle",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -87,7 +89,6 @@ contract RoscaSecureTest is Test {
     function joinCircleWithApproval(uint256 circleId, address member) internal {
         (,,,,, uint256 collateralFactor, uint256 insuranceFee,,,,) = rosca.getCircleInfo(circleId);
         uint256 totalLock = CONTRIBUTION_AMOUNT * collateralFactor + insuranceFee;
-
         vm.startPrank(member);
         token.approve(address(rosca), totalLock);
         rosca.joinCircle(circleId);
@@ -113,6 +114,8 @@ contract RoscaSecureTest is Test {
         emit CircleCreated(1, owner);
 
         uint256 circleId = rosca.createCircle(
+            "first test",
+            "description of the first test",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -150,6 +153,11 @@ contract RoscaSecureTest is Test {
         assertEq(currentRound, 0); // Not started yet
         assertEq(roundStart, 0); // Not started yet
         assertTrue(state == RoscaSecure.CircleState.Open);
+
+        (string memory name, string memory desc) = rosca.getCircleDetails(circleId);
+
+        assertEq(name, "first test"); 
+        assertEq(desc, "description of the first test");
     }
 
     function testCreateCircleWithInitialPayoutOrder() public {
@@ -160,6 +168,8 @@ contract RoscaSecureTest is Test {
         payoutOrder[3] = dave;
 
         uint256 circleId = rosca.createCircle(
+            "second test",
+            "other desc",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -175,6 +185,11 @@ contract RoscaSecureTest is Test {
         assertEq(storedOrder[1], bob);
         assertEq(storedOrder[2], carol);
         assertEq(storedOrder[3], dave);
+
+        (string memory name, string memory desc) = rosca.getCircleDetails(circleId);
+
+        assertEq(name, "second test"); 
+        assertEq(desc, "other desc");
     }
 
     function testCreateCircleFailsWithZeroToken() public {
@@ -182,7 +197,7 @@ contract RoscaSecureTest is Test {
 
         vm.expectRevert("token zero");
         rosca.createCircle(
-            address(0), CONTRIBUTION_AMOUNT, PERIOD_DURATION, MAX_MEMBERS, COLLATERAL_FACTOR, INSURANCE_FEE, emptyOrder
+            "", "",address(0), CONTRIBUTION_AMOUNT, PERIOD_DURATION, MAX_MEMBERS, COLLATERAL_FACTOR, INSURANCE_FEE, emptyOrder
         );
     }
 
@@ -191,7 +206,7 @@ contract RoscaSecureTest is Test {
 
         vm.expectRevert("contrib zero");
         rosca.createCircle(
-            address(token), 0, PERIOD_DURATION, MAX_MEMBERS, COLLATERAL_FACTOR, INSURANCE_FEE, emptyOrder
+            "", "", address(token), 0, PERIOD_DURATION, MAX_MEMBERS, COLLATERAL_FACTOR, INSURANCE_FEE, emptyOrder
         );
     }
 
@@ -200,6 +215,8 @@ contract RoscaSecureTest is Test {
 
         vm.expectRevert("period too short");
         rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             1 minutes, // Less than MIN_PERIOD_SECONDS (3 minutes)
@@ -216,6 +233,8 @@ contract RoscaSecureTest is Test {
         // Too few members
         vm.expectRevert("invalid members");
         rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -228,6 +247,8 @@ contract RoscaSecureTest is Test {
         // Too many members
         vm.expectRevert("invalid members");
         rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -243,6 +264,8 @@ contract RoscaSecureTest is Test {
 
         vm.expectRevert("collateralFactor < 1");
         rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -705,6 +728,8 @@ contract RoscaSecureTest is Test {
         // Should fail to create circle when paused
         vm.expectRevert();
         rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -719,6 +744,8 @@ contract RoscaSecureTest is Test {
 
         // Should work again
         uint256 circleId = rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -852,6 +879,8 @@ contract RoscaSecureTest is Test {
         // Create a circle with low collateral factor so insurance is needed
         address[] memory emptyOrder;
         uint256 circleId = rosca.createCircle(
+            "",
+            "",
             address(token),
             CONTRIBUTION_AMOUNT,
             PERIOD_DURATION,
@@ -913,7 +942,7 @@ contract RoscaSecureTest is Test {
         address[] memory emptyOrder;
 
         uint256 circleId = rosca.createCircle(
-            address(token), contributionAmount, periodDuration, maxMembers, collateralFactor, insuranceFee, emptyOrder
+            "", "", address(token), contributionAmount, periodDuration, maxMembers, collateralFactor, insuranceFee, emptyOrder
         );
 
         // Verify circle was created successfully

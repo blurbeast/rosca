@@ -66,6 +66,11 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         bool settled;
     }
 
+    struct CircleDetails {
+        bytes name;
+        bytes desc;
+    }
+
     // --- State ---
 
     uint256 public nextCircleId = 1;
@@ -88,6 +93,8 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
 
     // winner payouts credited (pull model). token amounts credited per address per circle
     mapping(uint256 => mapping(address => uint256)) public pendingPayouts;
+
+    mapping(uint256 => CircleDetails) public circleDetails;
 
     // events
     event CircleCreated(uint256 indexed circleId, address indexed creator);
@@ -125,6 +132,8 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
      * payoutOrder can be provided now (preferred) or later when all members join.
      */
     function createCircle(
+        string memory _name,
+        string memory _desc,
         address token,
         uint256 contributionAmount,
         uint256 periodDuration,
@@ -141,6 +150,11 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         require(collateralFactor >= 1, "collateralFactor < 1");
 
         uint256 circleId = nextCircleId++;
+        
+        CircleDetails storage details = circleDetails[circleId];
+        details.name = bytes(_name);
+        details.desc = bytes(_desc);
+
         Circle storage c = circles[circleId];
         c.creator = msg.sender;
         c.token = IERC20(token);
@@ -536,6 +550,19 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         currentRound = c.currentRound;
         roundStart = c.roundStart;
         state = c.state;
+    }
+
+    function getCircleDetails(uint256 circleId) external view returns ( string memory name, string memory desc ) {
+        name = string(_getCircleDetails(circleId).name);
+        desc = string(_getCircleDetails(circleId).desc);
+    } 
+
+    function getCircle(uint256 circleId) private view returns(Circle memory) {
+        return circles[circleId];
+    }
+
+    function _getCircleDetails(uint256 circleId) private view returns(CircleDetails memory) {
+        return circleDetails[circleId];
     }
 
     // Additional utility views (member info, round info, insurance pool)
