@@ -557,8 +557,15 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         desc = string(_getCircleDetails(circleId).desc);
     }
 
-    function getCircle(uint256 circleId) private view returns (Circle memory) {
+    function _getCircle(uint256 circleId) private view returns (Circle memory) {
         return circles[circleId];
+    }
+
+    function getAllCircles() external view returns (Circle[] memory circles_) {
+        circles_ = new Circle[](nextCircleId);
+        for (uint256 i = 1; i < nextCircleId; ++i) {
+            circles_[i] = _getCircle(i);
+        }
     }
 
     function _getCircleDetails(uint256 circleId) private view returns (CircleDetails memory) {
