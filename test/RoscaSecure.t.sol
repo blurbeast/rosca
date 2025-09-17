@@ -156,7 +156,7 @@ contract RoscaSecureTest is Test {
 
         (string memory name, string memory desc) = rosca.getCircleDetails(circleId);
 
-        assertEq(name, "first test"); 
+        assertEq(name, "first test");
         assertEq(desc, "description of the first test");
     }
 
@@ -188,7 +188,7 @@ contract RoscaSecureTest is Test {
 
         (string memory name, string memory desc) = rosca.getCircleDetails(circleId);
 
-        assertEq(name, "second test"); 
+        assertEq(name, "second test");
         assertEq(desc, "other desc");
     }
 
@@ -197,7 +197,15 @@ contract RoscaSecureTest is Test {
 
         vm.expectRevert("token zero");
         rosca.createCircle(
-            "", "",address(0), CONTRIBUTION_AMOUNT, PERIOD_DURATION, MAX_MEMBERS, COLLATERAL_FACTOR, INSURANCE_FEE, emptyOrder
+            "",
+            "",
+            address(0),
+            CONTRIBUTION_AMOUNT,
+            PERIOD_DURATION,
+            MAX_MEMBERS,
+            COLLATERAL_FACTOR,
+            INSURANCE_FEE,
+            emptyOrder
         );
     }
 
@@ -942,7 +950,15 @@ contract RoscaSecureTest is Test {
         address[] memory emptyOrder;
 
         uint256 circleId = rosca.createCircle(
-            "", "", address(token), contributionAmount, periodDuration, maxMembers, collateralFactor, insuranceFee, emptyOrder
+            "",
+            "",
+            address(token),
+            contributionAmount,
+            periodDuration,
+            maxMembers,
+            collateralFactor,
+            insuranceFee,
+            emptyOrder
         );
 
         // Verify circle was created successfully

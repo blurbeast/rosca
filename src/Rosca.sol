@@ -150,7 +150,7 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         require(collateralFactor >= 1, "collateralFactor < 1");
 
         uint256 circleId = nextCircleId++;
-        
+
         CircleDetails storage details = circleDetails[circleId];
         details.name = bytes(_name);
         details.desc = bytes(_desc);
@@ -552,16 +552,16 @@ contract RoscaSecure is ReentrancyGuard, Pausable, Ownable {
         state = c.state;
     }
 
-    function getCircleDetails(uint256 circleId) external view returns ( string memory name, string memory desc ) {
+    function getCircleDetails(uint256 circleId) external view returns (string memory name, string memory desc) {
         name = string(_getCircleDetails(circleId).name);
         desc = string(_getCircleDetails(circleId).desc);
-    } 
+    }
 
-    function getCircle(uint256 circleId) private view returns(Circle memory) {
+    function getCircle(uint256 circleId) private view returns (Circle memory) {
         return circles[circleId];
     }
 
-    function _getCircleDetails(uint256 circleId) private view returns(CircleDetails memory) {
+    function _getCircleDetails(uint256 circleId) private view returns (CircleDetails memory) {
         return circleDetails[circleId];
     }
 
