@@ -1,6 +1,6 @@
 import { RoscaSecureABI } from '@/abi/RoscaSecure';
-import { ROSCA_CONTRACT_ADDRESS } from '@/lib/config';
-import { useCallback, useEffect } from 'react';
+import { ROSCA_CONTRACT_ADDRESS, SUPPORTED_TOKENS } from '@/lib/config';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
     useWaitForTransactionReceipt,
@@ -323,7 +323,7 @@ export const useFinalizeRound = () => {
     return { finalizeRound, isPending, isConfirming, isConfirmed, hash };
 };
 
-// Hook for joining circles
+// Enhanced hook for joining circles with approval flow
 export const useJoinCircle = () => {
     const { data: hash, error, writeContract, isPending } = useWriteContract();
 
@@ -367,4 +367,153 @@ export const useJoinCircle = () => {
     }, [isConfirmed, error, isConfirming, hash]);
 
     return { joinCircle, isPending, isConfirming, isConfirmed, hash };
+};
+
+// Unified hook for the complete join circle flow (approve + join)
+export const useJoinCircleFlow = () => {
+    const [currentStep, setCurrentStep] = useState<'idle' | 'approving' | 'joining' | 'completed' | 'error'>('idle');
+    const [currentCircleId, setCurrentCircleId] = useState<bigint | null>(null);
+
+    const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
+    const { writeContract: writeJoin, data: joinHash, isPending: isJoinPending } = useWriteContract();
+
+    const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed, error: approveError } =
+        useWaitForTransactionReceipt({ hash: approveHash });
+
+    const { isLoading: isJoinConfirming, isSuccess: isJoinConfirmed, error: joinError } =
+        useWaitForTransactionReceipt({ hash: joinHash });
+
+    const startJoinFlow = useCallback(async (circleId: bigint, totalRequired: bigint) => {
+        try {
+            setCurrentStep('approving');
+            setCurrentCircleId(circleId);
+
+            // Step 1: Approve USDC spending
+            writeApprove({
+                address: SUPPORTED_TOKENS.USDC.address,
+                abi: [
+                    {
+                        type: "function",
+                        name: "approve",
+                        inputs: [
+                            { name: "spender", type: "address", internalType: "address" },
+                            { name: "value", type: "uint256", internalType: "uint256" },
+                        ],
+                        outputs: [{ name: "success", type: "bool", internalType: "bool" }],
+                        stateMutability: "nonpayable",
+                    },
+                ] as const,
+                functionName: 'approve',
+                args: [ROSCA_CONTRACT_ADDRESS, totalRequired],
+            });
+        } catch (error: any) {
+            toast.error(error.message, { position: "top-right" });
+            setCurrentStep('error');
+        }
+    }, [writeApprove]);
+
+    const cancelFlow = useCallback(() => {
+        setCurrentStep('idle');
+        setCurrentCircleId(null);
+        toast.dismiss('join-flow');
+    }, []);
+
+    // Handle approval confirmation
+    useEffect(() => {
+        if (isApproveConfirmed && currentStep === 'approving' && currentCircleId) {
+            setCurrentStep('joining');
+            toast.success("Approval confirmed! Now joining circle...", {
+                id: "join-flow",
+                position: "top-right",
+            });
+
+            // Step 2: Join circle
+            writeJoin({
+                address: ROSCA_CONTRACT_ADDRESS,
+                abi: RoscaSecureABI,
+                functionName: 'joinCircle',
+                args: [currentCircleId],
+            });
+        }
+    }, [isApproveConfirmed, currentStep, currentCircleId, writeJoin]);
+
+    // Handle join confirmation
+    useEffect(() => {
+        if (isJoinConfirmed && currentStep === 'joining') {
+            setCurrentStep('completed');
+            toast.success("Successfully joined circle!", {
+                id: "join-flow",
+                position: "top-right",
+            });
+            // Reset after a brief delay
+            setTimeout(() => {
+                setCurrentStep('idle');
+                setCurrentCircleId(null);
+            }, 2000);
+        }
+    }, [isJoinConfirmed, currentStep]);
+
+    // Handle errors
+    useEffect(() => {
+        if (approveError && currentStep === 'approving') {
+            toast.error((approveError as BaseError).shortMessage || approveError.message, {
+                id: "join-flow",
+                position: "top-right",
+            });
+            setCurrentStep('error');
+            setTimeout(() => {
+                setCurrentStep('idle');
+                setCurrentCircleId(null);
+            }, 3000);
+        }
+    }, [approveError, currentStep]);
+
+    useEffect(() => {
+        if (joinError && currentStep === 'joining') {
+            toast.error((joinError as BaseError).shortMessage || joinError.message, {
+                id: "join-flow",
+                position: "top-right",
+            });
+            setCurrentStep('error');
+            setTimeout(() => {
+                setCurrentStep('idle');
+                setCurrentCircleId(null);
+            }, 3000);
+        }
+    }, [joinError, currentStep]);
+
+    // Loading state toasts
+    useEffect(() => {
+        if (isApprovePending && currentStep === 'approving') {
+            toast.loading("Approving USDC spending...", {
+                id: "join-flow",
+                position: "top-right",
+            });
+        }
+    }, [isApprovePending, currentStep]);
+
+    useEffect(() => {
+        if (isJoinPending && currentStep === 'joining') {
+            toast.loading("Joining circle...", {
+                id: "join-flow",
+                position: "top-right",
+            });
+        }
+    }, [isJoinPending, currentStep]);
+
+    const isPending = currentStep !== 'idle' && currentStep !== 'completed';
+    const isApproving = currentStep === 'approving' && (isApprovePending || isApproveConfirming);
+    const isJoining = currentStep === 'joining' && (isJoinPending || isJoinConfirming);
+
+    return {
+        startJoinFlow,
+        cancelFlow,
+        currentStep,
+        currentCircleId,
+        isPending,
+        isApproving,
+        isJoining,
+        isCompleted: currentStep === 'completed',
+        isError: currentStep === 'error'
+    };
 };

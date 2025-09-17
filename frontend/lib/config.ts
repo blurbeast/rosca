@@ -13,22 +13,10 @@ export const ROSCA_CONTRACT_ADDRESS = process.env
 // Note: Replace with actual Somnia Testnet token addresses when available
 export const SUPPORTED_TOKENS = {
   USDC: {
-    address: "0xA0b86a33E6417c2A35A16ABDB8aD10b83cB21de0" as `0x${string}`, // Somnia Testnet USDC (placeholder)
+    address: "0x8dc1e7C7e86568458D7c529f8C87aC8c39a576f1" as `0x${string}`, // Somnia Testnet USDC (placeholder)
     decimals: 6,
     symbol: "USDC",
     name: "USD Coin",
-  },
-  USDT: {
-    address: "0x2A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B0" as `0x${string}`, // Somnia Testnet USDT (placeholder)
-    decimals: 6,
-    symbol: "USDT",
-    name: "Tether USD",
-  },
-  DAI: {
-    address: "0x3A17e4e4d8e6798e0D3F55E4D8a8a3e7c8F7A9B1" as `0x${string}`, // Somnia Testnet DAI (placeholder)
-    decimals: 18,
-    symbol: "DAI",
-    name: "Dai Stablecoin",
   },
 } as const;
 

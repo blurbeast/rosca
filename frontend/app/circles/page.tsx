@@ -1,17 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Search, Filter, Clock, Users, TrendingUp, Shield, Eye, DollarSign, Plus } from "lucide-react"
 import Link from "next/link"
 import { CircleState, SUPPORTED_TOKENS } from "@/lib/config"
+import { USDCMint } from "@/components/usdc-mint"
+import { useJoinCircleFlow } from "@/hooks/useRoscaContract"
+import { parseUnits } from "viem"
+import { useAccount } from "wagmi"
 
 // Mock circles data - replace with actual contract reads
 const mockCircles = [
@@ -58,7 +63,7 @@ const mockCircles = [
         name: "Students Emergency Fund",
         description: "College students pooling resources for unexpected expenses.",
         creator: "0x3456789012abcdef3456789012abcdef34567890",
-        token: SUPPORTED_TOKENS.DAI.address,
+        token: SUPPORTED_TOKENS.USDC.address,
         contributionAmount: "25",
         periodDuration: 1209600, // 14 days
         maxMembers: 12,
@@ -98,6 +103,41 @@ export default function CirclesPage() {
     const [statusFilter, setStatusFilter] = useState("all")
     const [sortBy, setSortBy] = useState("newest")
     const [selectedToken, setSelectedToken] = useState("all")
+    const { address } = useAccount()
+    const {
+        startJoinFlow,
+        currentCircleId,
+        isPending,
+        isApproving,
+        isJoining
+    } = useJoinCircleFlow()
+
+    const handleJoinCircle = async (e: React.MouseEvent, circleId: number) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (!address) {
+            toast.error("Please connect your wallet first")
+            return
+        }
+
+        // Find the circle to get contribution amount and collateral factor
+        const circle = mockCircles.find(c => c.id === circleId)
+        if (!circle) {
+            toast.error("Circle not found")
+            return
+        }
+
+        // Calculate total amount needed (collateral + insurance fee)
+        const contributionAmount = parseUnits(circle.contributionAmount, SUPPORTED_TOKENS.USDC.decimals)
+        const collateral = contributionAmount * BigInt(circle.collateralFactor)
+        const insuranceFee = parseUnits(circle.insuranceFee, SUPPORTED_TOKENS.USDC.decimals)
+        const totalRequired = collateral + insuranceFee
+
+        // Start the unified join flow
+        toast.info(`Starting join process for ${Number(circle.contributionAmount) * circle.collateralFactor + Number(circle.insuranceFee)} USDC...`)
+        await startJoinFlow(BigInt(circleId), totalRequired)
+    }
 
     const filteredCircles = mockCircles.filter((circle) => {
         const matchesSearch =
@@ -159,6 +199,11 @@ export default function CirclesPage() {
                         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                             Join trusted community savings circles or create your own. Build financial security together.
                         </p>
+                    </div>
+
+                    {/* USDC Minting Section */}
+                    <div className="mb-8">
+                        <USDCMint />
                     </div>
 
                     {/* Search and Filters */}
@@ -263,7 +308,7 @@ export default function CirclesPage() {
                         <TabsContent value={statusFilter} className="mt-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredCircles.map((circle) => (
-                                    <Link key={circle.id} href={`/circles/${circle.id}`}>
+                                    <div key={circle.id}>
                                         <Card className="glass-morphism border-primary/20 hover:border-primary/40 transition-all duration-300 hover:scale-105 group cursor-pointer">
                                             <CardHeader className="p-4">
                                                 <div className="flex items-start justify-between mb-2">
@@ -342,24 +387,45 @@ export default function CirclesPage() {
                                                     </div>
 
                                                     {/* Action Button */}
-                                                    <Button
-                                                        size="sm"
-                                                        className={`w-full ${circle.state === CircleState.Open
-                                                            ? "bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
-                                                            : circle.state === CircleState.Active
-                                                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                                                                : "bg-muted text-muted-foreground"
-                                                            }`}
-                                                        disabled={circle.state === CircleState.Completed}
-                                                    >
-                                                        {circle.state === CircleState.Open ? "Join Circle" :
-                                                            circle.state === CircleState.Active ? "View Details" :
-                                                                "View History"}
-                                                    </Button>
+                                                    {circle.state === CircleState.Open ? (
+                                                        <Button
+                                                            size="sm"
+                                                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
+                                                            onClick={(e) => handleJoinCircle(e, circle.id)}
+                                                            disabled={
+                                                                isPending && currentCircleId === BigInt(circle.id)
+                                                            }
+                                                        >
+                                                            {isPending && currentCircleId === BigInt(circle.id) ? (
+                                                                <div className="flex items-center justify-center space-x-2">
+                                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                    <span>
+                                                                        {isApproving ? "Approving..." :
+                                                                         isJoining ? "Joining..." : "Processing..."}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                "Join Circle"
+                                                            )}
+                                                        </Button>
+                                                    ) : (
+                                                        <Link href={`/circles/${circle.id}`}>
+                                                            <Button
+                                                                size="sm"
+                                                                className={`w-full ${circle.state === CircleState.Active
+                                                                        ? "bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                                                                        : "bg-muted text-muted-foreground"
+                                                                    }`}
+                                                                disabled={circle.state === CircleState.Completed}
+                                                            >
+                                                                {circle.state === CircleState.Active ? "View Details" : "View History"}
+                                                            </Button>
+                                                        </Link>
+                                                    )}
                                                 </div>
                                             </CardContent>
                                         </Card>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         </TabsContent>
