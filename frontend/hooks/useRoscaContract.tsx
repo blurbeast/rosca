@@ -14,6 +14,8 @@ export const useCreateCircle = () => {
     const { data: hash, error, writeContract, isPending } = useWriteContract();
 
     const createCircle = useCallback(async (params: {
+        name: string;
+        description: string;
         token: `0x${string}`;
         contributionAmount: bigint;
         periodDuration: bigint;
@@ -28,6 +30,8 @@ export const useCreateCircle = () => {
                 abi: RoscaSecureABI,
                 functionName: 'createCircle',
                 args: [
+                    params.name,
+                    params.description,
                     params.token,
                     params.contributionAmount,
                     params.periodDuration,

@@ -9,6 +9,10 @@ export const config = {
 export const ROSCA_CONTRACT_ADDRESS = process.env
   .NEXT_PUBLIC_ROSCA_CONTRACT_ADDRESS as `0x${string}`; // actual deployed address
 
+// Multicall3 Contract Address
+export const MULTICALL3_ADDRESS = process.env
+  .NEXT_PUBLIC_MULTICALL3_ADDRESS as `0x${string}`;
+
 // Supported ERC20 tokens for contributions on Somnia Testnet
 // Note: Replace with actual Somnia Testnet token addresses when available
 export const SUPPORTED_TOKENS = {

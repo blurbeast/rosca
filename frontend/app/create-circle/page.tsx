@@ -1,7 +1,8 @@
 // frontend/app/create-circle/page.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,7 +20,8 @@ import { parseUnits } from "viem"
 
 export default function CreateCirclePage() {
     const { isConnected } = useAccount()
-    const { createCircle, isPending } = useCreateCircle()
+    const { createCircle, isPending, isConfirmed } = useCreateCircle()
+    const router = useRouter()
 
     // Form state
     const [formData, setFormData] = useState({
@@ -60,6 +62,8 @@ export default function CreateCirclePage() {
 
         try {
             await createCircle({
+                name: formData.name,
+                description: formData.description,
                 token: formData.token as `0x${string}`,
                 contributionAmount: parseUnits(formData.contributionAmount, selectedToken.decimals),
                 periodDuration: BigInt(formData.periodDuration),
@@ -72,6 +76,13 @@ export default function CreateCirclePage() {
             console.error("Failed to create circle:", error)
         }
     }
+
+    // Navigate to My Circles after successful creation
+    useEffect(() => {
+        if (isConfirmed) {
+            router.push('/my-circles')
+        }
+    }, [isConfirmed, router])
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }))

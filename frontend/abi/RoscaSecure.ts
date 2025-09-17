@@ -30,6 +30,16 @@ export const RoscaSecureABI = [
   },
   {
     type: "function",
+    name: "circleDetails",
+    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    outputs: [
+      { name: "name", type: "bytes", internalType: "bytes" },
+      { name: "desc", type: "bytes", internalType: "bytes" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "circles",
     inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     outputs: [
@@ -70,6 +80,8 @@ export const RoscaSecureABI = [
     type: "function",
     name: "createCircle",
     inputs: [
+      { name: "_name", type: "string", internalType: "string" },
+      { name: "_desc", type: "string", internalType: "string" },
       { name: "token", type: "address", internalType: "address" },
       { name: "contributionAmount", type: "uint256", internalType: "uint256" },
       { name: "periodDuration", type: "uint256", internalType: "uint256" },
@@ -102,6 +114,16 @@ export const RoscaSecureABI = [
     inputs: [{ name: "circleId", type: "uint256", internalType: "uint256" }],
     outputs: [],
     stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getCircleDetails",
+    inputs: [{ name: "circleId", type: "uint256", internalType: "uint256" }],
+    outputs: [
+      { name: "name", type: "string", internalType: "string" },
+      { name: "desc", type: "string", internalType: "string" },
+    ],
+    stateMutability: "view",
   },
   {
     type: "function",

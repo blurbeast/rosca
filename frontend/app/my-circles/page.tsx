@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useAccount } from "wagmi"
+import { useUserCircles } from "@/hooks/useCircleQueries"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,13 +12,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import {
   Search,
-  Clock,
   Users,
   DollarSign,
-  Calendar,
   Shield,
-  AlertTriangle,
-  CheckCircle,
   Plus,
   Eye,
   Settings,
@@ -129,17 +127,39 @@ const mockMyCircles = [
 export default function MyCirclesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const { address } = useAccount()
+  const { circles: userCircles } = useUserCircles(address)
 
-  const filteredCircles = mockMyCircles.filter((circle) => {
+  // Helper function to check if a circle is from mock data
+  const isMockCircle = (circle: any): circle is typeof mockMyCircles[0] => {
+    return 'role' in circle
+  }
+
+  // Use real user circles or fallback to mock data for development
+  const allUserCircles = userCircles.length > 0 ? userCircles : mockMyCircles
+
+  const filteredCircles = allUserCircles.filter((circle) => {
     const matchesSearch =
       circle.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       circle.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" ||
-      (statusFilter === "active" && circle.status === CircleState.Active) ||
-      (statusFilter === "completed" && circle.status === CircleState.Completed) ||
-      (statusFilter === "open" && circle.status === CircleState.Open) ||
-      (statusFilter === "my-turn" && circle.myTurn)
+    let matchesStatus = statusFilter === "all"
+
+    if (isMockCircle(circle)) {
+      // Handle mock data with different properties
+      matchesStatus = statusFilter === "all" ||
+        (statusFilter === "active" && circle.status === CircleState.Active) ||
+        (statusFilter === "completed" && circle.status === CircleState.Completed) ||
+        (statusFilter === "open" && circle.status === CircleState.Open) ||
+        (statusFilter === "my-turn" && circle.myTurn)
+    } else {
+      // Handle real contract data
+      matchesStatus = statusFilter === "all" ||
+        (statusFilter === "active" && circle.state === CircleState.Active) ||
+        (statusFilter === "completed" && circle.state === CircleState.Completed) ||
+        (statusFilter === "open" && circle.state === CircleState.Open) ||
+        (statusFilter === "my-turn" && false) // We'd need additional data to determine this
+    }
 
     return matchesSearch && matchesStatus
   })
@@ -278,24 +298,36 @@ export default function MyCirclesPage() {
             <TabsList className="glass-morphism border border-primary/20 p-1">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 All Circles
-                <Badge variant="secondary" className="text-xs">{mockMyCircles.length}</Badge>
+                <Badge variant="secondary" className="text-xs">{allUserCircles.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="my-turn" className="flex items-center gap-2">
                 My Turn
                 <Badge variant="secondary" className="text-xs bg-yellow-500/20 text-yellow-400">
-                  {mockMyCircles.filter(c => c.myTurn).length}
+                  {allUserCircles.filter(c => isMockCircle(c) ? c.myTurn : false).length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="active" className="flex items-center gap-2">
                 Active
                 <Badge variant="secondary" className="text-xs">
-                  {mockMyCircles.filter(c => c.status === CircleState.Active).length}
+                  {allUserCircles.filter(c => {
+                    if (isMockCircle(c)) {
+                      return c.status === CircleState.Active
+                    } else {
+                      return c.state === CircleState.Active
+                    }
+                  }).length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="completed" className="flex items-center gap-2">
                 Completed
                 <Badge variant="secondary" className="text-xs">
-                  {mockMyCircles.filter(c => c.status === CircleState.Completed).length}
+                  {allUserCircles.filter(c => {
+                    if (isMockCircle(c)) {
+                      return c.status === CircleState.Completed
+                    } else {
+                      return c.state === CircleState.Completed
+                    }
+                  }).length}
                 </Badge>
               </TabsTrigger>
             </TabsList>
@@ -304,7 +336,24 @@ export default function MyCirclesPage() {
             {/* Circles Grid */}
             <TabsContent value={statusFilter}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredCircles.map((circle) => (
+                {filteredCircles.map((circle) => {
+                  const isMock = isMockCircle(circle)
+
+                  // Get appropriate values based on data type
+                  const status = isMock ? circle.status : circle.state
+                  const myTurn = isMock ? circle.myTurn : false
+                  const role = isMock ? circle.role : 'creator'
+                  const contribution = isMock ? circle.contribution : circle.contributionAmount
+                  const tokenAddress = isMock ? circle.token : circle.token
+                  const currentRound = isMock ? circle.currentRound : circle.currentRound
+                  const totalPayments = isMock ? circle.totalPayments : circle.maxMembers
+                  const paymentsCompleted = isMock ? circle.paymentsCompleted : currentRound - 1
+                  const myPosition = isMock ? circle.myPosition : 1
+                  const totalMembers = isMock ? circle.totalMembers : circle.currentMembers
+                  const collateralLocked = isMock ? circle.collateralLocked : (parseFloat(circle.contributionAmount) * circle.collateralFactor).toString()
+                  const collateralRequired = isMock ? circle.collateralRequired : (parseFloat(circle.contributionAmount) * circle.collateralFactor).toString()
+
+                  return (
                   <Card key={circle.id} className="glass-morphism border-primary/20 hover:border-primary/40 transition-all duration-300">
                     <CardHeader>
                       <div className="flex items-start justify-between mb-4">
@@ -317,8 +366,8 @@ export default function MyCirclesPage() {
                       </div>
 
                       <div className="flex items-center gap-2 mb-2">
-                        {getRoleBadge(circle.role)}
-                        {getStatusBadge(circle.status, circle.myTurn)}
+                        {getRoleBadge(role)}
+                        {getStatusBadge(status, myTurn)}
                       </div>
                     </CardHeader>
 
@@ -328,11 +377,11 @@ export default function MyCirclesPage() {
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-muted-foreground text-sm">Circle Progress</span>
                           <span className="text-foreground font-medium text-sm">
-                            Round {circle.currentRound} of {circle.totalPayments}
+                            Round {currentRound} of {totalPayments}
                           </span>
                         </div>
                         <Progress
-                          value={(circle.paymentsCompleted / circle.totalPayments) * 100}
+                          value={totalPayments > 0 ? (paymentsCompleted / totalPayments) * 100 : 0}
                           className="h-2"
                         />
                       </div>
@@ -341,12 +390,12 @@ export default function MyCirclesPage() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">My Position</p>
-                          <p className="font-semibold">{circle.myPosition} of {circle.totalMembers}</p>
+                          <p className="font-semibold">{myPosition} of {totalMembers}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Contribution</p>
                           <p className="font-semibold text-primary">
-                            {circle.contribution} {getTokenSymbol(circle.token)}
+                            {contribution} {getTokenSymbol(tokenAddress)}
                           </p>
                         </div>
                         <div>
@@ -356,9 +405,9 @@ export default function MyCirclesPage() {
                         <div>
                           <p className="text-muted-foreground">Next Action</p>
                           <p className="font-semibold">
-                            {circle.status === CircleState.Open ? "Waiting" :
-                              circle.myTurn ? "Pay Now" :
-                                circle.status === CircleState.Completed ? "Complete" :
+                            {status === CircleState.Open ? "Waiting" :
+                              myTurn ? "Pay Now" :
+                                status === CircleState.Completed ? "Complete" :
                                   "Wait"}
                           </p>
                         </div>
@@ -372,10 +421,10 @@ export default function MyCirclesPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium">
-                            {circle.collateralLocked} / {circle.collateralRequired} {getTokenSymbol(circle.token)}
+                            {collateralLocked} / {collateralRequired} {getTokenSymbol(tokenAddress)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {circle.status === CircleState.Completed ? "Released" : "Locked"}
+                            {status === CircleState.Completed ? "Released" : "Locked"}
                           </div>
                         </div>
                       </div>
@@ -383,15 +432,21 @@ export default function MyCirclesPage() {
                       {/* Performance Stats */}
                       <div className="grid grid-cols-3 gap-3 text-center text-sm">
                         <div>
-                          <div className="text-primary font-bold">${circle.totalContributed}</div>
+                          <div className="text-primary font-bold">
+                            ${isMock ? circle.totalContributed : (parseFloat(contribution) * paymentsCompleted).toFixed(0)}
+                          </div>
                           <div className="text-muted-foreground text-xs">Contributed</div>
                         </div>
                         <div>
-                          <div className="text-secondary font-bold">${circle.payoutReceived}</div>
+                          <div className="text-secondary font-bold">
+                            ${isMock ? circle.payoutReceived : "0"}
+                          </div>
                           <div className="text-muted-foreground text-xs">Received</div>
                         </div>
                         <div>
-                          <div className="text-green-400 font-bold">{circle.successRate}%</div>
+                          <div className="text-green-400 font-bold">
+                            {isMock ? circle.successRate : (status === CircleState.Completed ? 100 : 0)}%
+                          </div>
                           <div className="text-muted-foreground text-xs">Success</div>
                         </div>
                       </div>
@@ -400,10 +455,10 @@ export default function MyCirclesPage() {
                       <div className="flex gap-2">
                         <Link href={`/circles/${circle.id}`} className="flex-1">
                           <Button
-                            variant={circle.myTurn ? "default" : "outline"}
-                            className={`w-full ${circle.myTurn ? "neon-glow" : ""}`}
+                            variant={myTurn ? "default" : "outline"}
+                            className={`w-full ${myTurn ? "neon-glow" : ""}`}
                           >
-                            {circle.myTurn ? (
+                            {myTurn ? (
                               <>
                                 <DollarSign className="w-4 h-4 mr-2" />
                                 Make Payment
@@ -417,7 +472,7 @@ export default function MyCirclesPage() {
                           </Button>
                         </Link>
 
-                        {circle.role === "creator" && (
+                        {role === "creator" && (
                           <Button variant="outline" size="icon" className="glass-morphism bg-transparent">
                             <Settings className="w-4 h-4" />
                           </Button>
@@ -425,7 +480,8 @@ export default function MyCirclesPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  )
+                })}
               </div>
 
               {filteredCircles.length === 0 && (

@@ -140,8 +140,23 @@ forge test -vv
 **Somnia Testnet**
 - Chain ID: 50312
 - RPC URL: https://dream-rpc.somnia.network
-- Explorer: https://explorer.testnet.somnia.network
+- Explorer: https://shannon-explorer.somnia.network
 - Native Currency: STT
+
+### 📋 Deployed Contracts
+
+**RoscaSecure Main Contract**
+- Address: [0x923107fe8A2547ad09eD9a645F327Ba1E17BF1a6](https://shannon-explorer.somnia.network/address/0x923107fe8A2547ad09eD9a645F327Ba1E17BF1a6)
+- Description: Main RoscaSecure smart contract handling circle creation, member management, and payout distribution
+
+**Multicall3 Contract**
+- Address: [0x9c4DBb1c67CB07607eEcb0d4B933e45312d6b2b8](https://shannon-explorer.somnia.network/address/0x9c4DBb1c67CB07607eEcb0d4B933e45312d6b2b8)
+- Description: Efficient batch contract calls for fetching multiple circle data
+
+**USDC Test Token**
+- Address: [0x8dc1e7C7e86568458D7c529f8C87aC8c39a576f1](https://shannon-explorer.somnia.network/address/0x8dc1e7C7e86568458D7c529f8C87aC8c39a576f1)
+- Description: Test USDC token for contributions and payments
+
 
 ## 📦 Technology Stack
 
