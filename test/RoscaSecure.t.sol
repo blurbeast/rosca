@@ -3,24 +3,11 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {RoscaSecure} from "../src/Rosca.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-// Mock ERC20 token for testing
-contract MockERC20 is ERC20 {
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
-
-    function mint(address to, uint256 amount) public {
-        _mint(to, amount);
-    }
-
-    function burn(address from, uint256 amount) public {
-        _burn(from, amount);
-    }
-}
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract RoscaSecureTest is Test {
     RoscaSecure public rosca;
-    MockERC20 public token;
+    ERC20Mock public token;
 
     address public owner = address(this);
     address public alice = address(0x1);
@@ -51,7 +38,7 @@ contract RoscaSecureTest is Test {
 
     function setUp() public {
         rosca = new RoscaSecure();
-        token = new MockERC20("Test Token", "TEST");
+        token = new ERC20Mock();
 
         // Fund test accounts
         address[] memory accounts = new address[](6);
