@@ -9,9 +9,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Add this to skip prerendering problematic pages
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;

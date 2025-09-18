@@ -110,7 +110,7 @@ export function RoscaFooter() {
             {/* Bottom Footer */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-muted-foreground text-sm">
-                © 2024 RoscaSecure. All rights reserved. Built on Somnia Network.
+                © {new Date().getFullYear()} RoscaSecure. All rights reserved. Built on Somnia Network.
               </div>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Powered by</span>

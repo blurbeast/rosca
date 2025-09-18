@@ -16,6 +16,7 @@ import { ChevronDown, LogOut, User, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
 import { somniaTestnet } from "viem/chains";
+import { useEffect, useState } from 'react';
 
 interface WalletConnectProps {
     isMobile?: boolean;
@@ -23,9 +24,35 @@ interface WalletConnectProps {
 }
 
 export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectProps) => {
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Prevent SSR issues by only rendering after mount
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const { address, isConnected } = useAccount();
     const { disconnect } = useDisconnect();
-    const { data: balance } = useBalance({ address });
+    const { data: balance } = useBalance({
+        address,
+        query: {
+            enabled: isMounted && !!address
+        }
+    });
+
+    // Don't render anything during SSR
+    if (!isMounted) {
+        return (
+            <Button
+                disabled
+                className="flex items-center gap-2 glass-morphism border-primary/30 text-primary bg-transparent"
+                variant="outline"
+            >
+                <Wallet className="w-4 h-4" />
+                Connect Wallet
+            </Button>
+        );
+    }
 
     const isSomniaNetwork = somniaTestnet.id;
 
