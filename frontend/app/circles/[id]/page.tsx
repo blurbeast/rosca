@@ -1,17 +1,20 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
+import { RoscaSecureABI } from '@/abi/RoscaSecure';
+import { ROSCA_CONTRACT_ADDRESS } from '@/lib/config';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCircleData, useMemberData, usePendingPayout, useJoinCircleFlow, useContribute, useClaimPayout, useFinalizeRound } from '@/hooks/useRoscaContract';
+import { useCircleData, useMemberData, usePendingPayout, useJoinCircleFlow, useContribute, useClaimPayout, useFinalizeRound, useWithdrawCollateral } from '@/hooks/useRoscaContract';
 import { useCircleInfo, useCircleDetails, useCircleMembers } from '@/hooks/useCircleQueries';
 import { formatUnits } from 'viem';
-import { SUPPORTED_TOKENS } from '@/lib/config';
-import { ArrowLeft, Users, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, AlertCircle, Clock, CheckCircle, XCircle, Timer, Award, TrendingUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 
 export default function CircleDetailsPage() {
@@ -35,42 +38,15 @@ export default function CircleDetailsPage() {
     const { contribute, isPending: isContributing } = useContribute();
     const { claimPayout, isPending: isClaiming } = useClaimPayout();
     const { finalizeRound, isPending: isFinalizing } = useFinalizeRound();
+    const { withdrawCollateral, isPending: isWithdrawing } = useWithdrawCollateral();
+
+    // Timer and round state
+    const [timeRemaining, setTimeRemaining] = useState<number>(0);
+    const [roundExpired, setRoundExpired] = useState(false);
+    const [previousState, setPreviousState] = useState<number | null>(null);
 
     const isLoading = isLoadingInfo || isLoadingDetails || isLoadingMembers || isLoadingMember || isLoadingPayout || isLoadingLegacy;
     const error = infoError || detailsError || membersError || legacyError;
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-                <div className="max-w-4xl mx-auto">
-                    <div className="text-center py-12">
-                        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-white mb-2">Error Loading Circle</h2>
-                        <p className="text-slate-400 mb-6">Unable to load circle details. Please try again.</p>
-                        <Button onClick={() => router.back()} variant="outline">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Go Back
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-                <div className="max-w-4xl mx-auto space-y-6">
-                    <Skeleton className="h-8 w-32" />
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <Skeleton className="h-64" />
-                        <Skeleton className="h-64" />
-                    </div>
-                    <Skeleton className="h-48" />
-                </div>
-            </div>
-        );
-    }
 
     const getStatusBadge = (status: number) => {
         switch (status) {
@@ -107,14 +83,114 @@ export default function CircleDetailsPage() {
     const currentMembers = members?.length || 0;
     const progressPercentage = maxMembers > 0 ? (currentMembers / maxMembers) * 100 : 0;
 
+    // Enhanced conditions for all actions
+    const canWithdrawCollateral = (circleInfo?.state === 2 || circleInfo?.state === 3) && isMember; // Completed or Cancelled
+    const canFinalizeRound = circleInfo?.state === 1 && roundExpired; // Active and round expired
+    const isCircleCompleted = circleInfo?.state === 2;
+    const isCircleCancelled = circleInfo?.state === 3;
+    const isCircleActive = circleInfo?.state === 1;
+
+    // Check if user contributed in current round (only for active circles)
+    const { data: hasContributedThisRound } = useReadContract({
+        address: ROSCA_CONTRACT_ADDRESS,
+        abi: RoscaSecureABI,
+        functionName: 'getRoundDeposited',
+        args: [circleId, BigInt(currentRound), address || '0x0'],
+        query: {
+            enabled: isCircleActive && !!address && currentRound > 0
+        }
+    });
+
+    // Timer calculation for active circles
+    useEffect(() => {
+        if (!circleInfo || !isCircleActive) return;
+
+        const calculateTimeRemaining = () => {
+            const now = Math.floor(Date.now() / 1000);
+            const roundStart = Number(circleInfo.roundStart);
+            const periodDuration = Number(circleInfo.periodDuration);
+            const roundEnd = roundStart + periodDuration;
+            const remaining = roundEnd - now;
+
+            setTimeRemaining(Math.max(0, remaining));
+            setRoundExpired(remaining <= 0);
+        };
+
+        calculateTimeRemaining();
+        const interval = setInterval(calculateTimeRemaining, 1000);
+
+        return () => clearInterval(interval);
+    }, [circleInfo, isCircleActive]);
+
+    // State transition notifications
+    useEffect(() => {
+        if (!circleInfo || previousState === null) {
+            if (circleInfo) setPreviousState(circleInfo.state);
+            return;
+        }
+
+        const currentState = circleInfo.state;
+
+        // Circle became active
+        if (previousState === 0 && currentState === 1) {
+            toast.success('🎉 Circle is now active! Round 1 has started.', {
+                position: 'top-right',
+                duration: 5000
+            });
+        }
+
+        // Circle completed
+        if (previousState === 1 && currentState === 2) {
+            toast.success('✅ Circle completed successfully! You can now withdraw your collateral.', {
+                position: 'top-right',
+                duration: 5000
+            });
+        }
+
+        // Circle cancelled
+        if (currentState === 3 && previousState !== 3) {
+            toast.error('❌ Circle has been cancelled. You can withdraw your collateral.', {
+                position: 'top-right',
+                duration: 5000
+            });
+        }
+
+        setPreviousState(currentState);
+    }, [circleInfo, previousState]);
+
+    // Round expiration notification
+    useEffect(() => {
+        if (roundExpired && isCircleActive && timeRemaining === 0) {
+            toast.warning('⏰ Round has expired! It can now be finalized.', {
+                position: 'top-right',
+                duration: 5000
+            });
+        }
+    }, [roundExpired, isCircleActive, timeRemaining]);
+
+    // Format time remaining
+    const formatTimeRemaining = (seconds: number) => {
+        if (seconds <= 0) return "Round Expired";
+
+        const days = Math.floor(seconds / (24 * 60 * 60));
+        const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+        const minutes = Math.floor((seconds % (60 * 60)) / 60);
+        const secs = seconds % 60;
+
+        if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+        if (minutes > 0) return `${minutes}m ${secs}s`;
+        return `${secs}s`;
+    };
+
     const handleJoinCircle = async () => {
-        if (!circleInfo) return;
+        if (!circleInfo || !address) return;
         const contributionAmount = circleInfo.contributionAmount;
         const collateralFactor = circleInfo.collateralFactor;
         const insuranceFee = circleInfo.insuranceFee;
-        const totalRequired = contributionAmount + (contributionAmount * collateralFactor / BigInt(100)) + insuranceFee;
+        const totalRequired = (contributionAmount * collateralFactor) + insuranceFee;
 
-        await startJoinFlow(circleId, totalRequired);
+        await startJoinFlow(circleId, totalRequired, address);
     };
 
     const handleContribute = () => {
@@ -128,6 +204,45 @@ export default function CircleDetailsPage() {
     const handleFinalizeRound = () => {
         finalizeRound(circleId);
     };
+
+    const handleWithdrawCollateral = () => {
+        withdrawCollateral(circleId);
+    };
+
+    // Error state
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center py-12">
+                        <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-white mb-2">Error Loading Circle</h2>
+                        <p className="text-slate-400 mb-6">Unable to load circle details. Please try again.</p>
+                        <Button onClick={() => router.back()} variant="outline">
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Go Back
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <Skeleton className="h-8 w-32" />
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <Skeleton className="h-64" />
+                        <Skeleton className="h-64" />
+                    </div>
+                    <Skeleton className="h-48" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
@@ -223,15 +338,26 @@ export default function CircleDetailsPage() {
                                     <p className="text-slate-400 text-sm mb-2">Your Status</p>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
                                         <div>
-                                            <span className="text-slate-400">Contributed:</span>
+                                            <span className="text-slate-400">Contributed This Round:</span>
                                             <span className="text-green-400 ml-1">
-                                                {memberInfo[1] ? '✓' : '✗'}
+                                                {isCircleActive
+                                                    ? (hasContributedThisRound ? '✓' : '✗')
+                                                    : 'N/A'
+                                                }
                                             </span>
                                         </div>
                                         <div>
                                             <span className="text-slate-400">Received Payout:</span>
                                             <span className="text-blue-400 ml-1">
-                                                {memberInfo[2] ? '✓' : '✗'}
+                                                {(() => {
+                                                    if (!payoutOrder || !address) return '✗';
+                                                    // Check if user was a winner in any previous round
+                                                    const userIndex = payoutOrder.findIndex(addr => addr === address);
+                                                    if (userIndex === -1) return '✗';
+                                                    // User has received payout if their round (userIndex + 1) is less than current round
+                                                    const userRound = userIndex + 1;
+                                                    return userRound < currentRound ? '✓' : '✗';
+                                                })()}
                                             </span>
                                         </div>
                                     </div>
@@ -240,6 +366,128 @@ export default function CircleDetailsPage() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Round Status - Only show for active circles */}
+                {isCircleActive && (
+                    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                <Timer className="h-5 w-5" />
+                                Round {currentRound} Status
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Timer */}
+                                <div className="text-center">
+                                    <div className={`text-2xl font-bold ${roundExpired ? 'text-red-400' : 'text-green-400'}`}>
+                                        {formatTimeRemaining(timeRemaining)}
+                                    </div>
+                                    <p className="text-slate-400 text-sm">
+                                        {roundExpired ? 'Ready to finalize' : 'Time remaining'}
+                                    </p>
+                                </div>
+
+                                {/* Contribution Status */}
+                                <div className="text-center">
+                                    <div className="text-xl font-bold text-white">
+                                        {hasContributedThisRound ? (
+                                            <span className="text-green-400 flex items-center justify-center gap-1">
+                                                <CheckCircle className="h-5 w-5" />
+                                                Paid
+                                            </span>
+                                        ) : (
+                                            <span className="text-yellow-400 flex items-center justify-center gap-1">
+                                                <Clock className="h-5 w-5" />
+                                                Pending
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-slate-400 text-sm">Your contribution</p>
+                                </div>
+
+                                {/* Current Winner */}
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-purple-400 flex items-center justify-center gap-1">
+                                        <Award className="h-5 w-5" />
+                                        Winner
+                                    </div>
+                                    <p className="text-slate-400 text-sm font-mono">
+                                        {payoutOrder && payoutOrder[currentRound - 1]
+                                            ? `${payoutOrder[currentRound - 1].slice(0, 6)}...${payoutOrder[currentRound - 1].slice(-4)}`
+                                            : 'Loading...'
+                                        }
+                                    </p>
+                                    {payoutOrder && payoutOrder[currentRound - 1] === address && (
+                                        <Badge className="bg-purple-500/20 text-purple-400 text-xs mt-1">You!</Badge>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Round Progress */}
+                            <div>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-slate-400">Round Progress</span>
+                                    <span className="text-white">{Math.max(0, 100 - (timeRemaining / Number(circleInfo?.periodDuration || 1)) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={Math.max(0, 100 - (timeRemaining / Number(circleInfo?.periodDuration || 1)) * 100)}
+                                    className="h-2"
+                                />
+                            </div>
+
+                            {/* Urgent Actions */}
+                            {roundExpired && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                                    <div className="flex items-center gap-2 text-red-400 text-sm font-medium">
+                                        <AlertCircle className="h-4 w-4" />
+                                        Round has expired! Anyone can finalize to process defaults and advance to next round.
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Circle Completion Status */}
+                {(isCircleCompleted || isCircleCancelled) && (
+                    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-white flex items-center gap-2">
+                                {isCircleCompleted ? (
+                                    <>
+                                        <CheckCircle className="h-5 w-5 text-green-400" />
+                                        Circle Completed
+                                    </>
+                                ) : (
+                                    <>
+                                        <XCircle className="h-5 w-5 text-red-400" />
+                                        Circle Cancelled
+                                    </>
+                                )}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-3">
+                                <p className="text-slate-400">
+                                    {isCircleCompleted
+                                        ? "All rounds have been completed successfully! You can now withdraw your collateral."
+                                        : "This circle has been cancelled. You can withdraw your collateral."
+                                    }
+                                </p>
+
+                                {canWithdrawCollateral && (
+                                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-blue-400 text-sm font-medium">
+                                            <TrendingUp className="h-4 w-4" />
+                                            Your collateral is ready for withdrawal
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Actions */}
                 <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
@@ -280,14 +528,23 @@ export default function CircleDetailsPage() {
                                 </Button>
                             )}
 
-                            {circleInfo && circleInfo.state === 1 && (
+                            {canFinalizeRound && (
                                 <Button
                                     onClick={handleFinalizeRound}
                                     disabled={isFinalizing}
-                                    variant="outline"
-                                    className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+                                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
                                 >
-                                    {isFinalizing ? 'Finalizing...' : 'Finalize Round'}
+                                    {isFinalizing ? 'Finalizing...' : 'Finalize Expired Round'}
+                                </Button>
+                            )}
+
+                            {canWithdrawCollateral && (
+                                <Button
+                                    onClick={handleWithdrawCollateral}
+                                    disabled={isWithdrawing}
+                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                >
+                                    {isWithdrawing ? 'Withdrawing...' : 'Withdraw Collateral'}
                                 </Button>
                             )}
                         </div>
@@ -298,33 +555,85 @@ export default function CircleDetailsPage() {
                 {members && members.length > 0 && (
                     <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                         <CardHeader>
-                            <CardTitle className="text-white">Circle Members</CardTitle>
+                            <CardTitle className="text-white flex items-center justify-between">
+                                Circle Members
+                                {isCircleActive && (
+                                    <Badge variant="outline" className="text-xs">
+                                        Round {currentRound}
+                                    </Badge>
+                                )}
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
-                                {members.map((member, index) => (
-                                    <div
-                                        key={member}
-                                        className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                                {index + 1}
+                                {members.map((member, index) => {
+                                    const isCurrentWinner = isCircleActive && payoutOrder && payoutOrder[currentRound - 1] === member;
+                                    const isUpcoming = isCircleActive && payoutOrder &&
+                                        payoutOrder.findIndex(addr => addr === member) > (currentRound - 1);
+                                    const hasReceivedPayout = !isCircleActive || (payoutOrder &&
+                                        payoutOrder.findIndex(addr => addr === member) < (currentRound - 1));
+
+                                    return (
+                                        <div
+                                            key={member}
+                                            className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                                                isCurrentWinner
+                                                    ? 'bg-purple-500/20 border border-purple-500/30'
+                                                    : 'bg-slate-700/30 hover:bg-slate-700/50'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                                                    isCurrentWinner
+                                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500'
+                                                        : 'bg-gradient-to-r from-slate-600 to-slate-500'
+                                                }`}>
+                                                    {payoutOrder ? payoutOrder.findIndex(addr => addr === member) + 1 : index + 1}
+                                                </div>
+                                                <div>
+                                                    <span className="text-white font-mono text-sm">
+                                                        {formatAddress(member)}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {member === address && (
+                                                            <Badge variant="outline" className="text-xs">You</Badge>
+                                                        )}
+                                                        {isCurrentWinner && (
+                                                            <Badge className="bg-purple-500/20 text-purple-400 text-xs">Current Winner</Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-white font-mono text-sm">
-                                                {formatAddress(member)}
-                                            </span>
-                                            {member === address && (
-                                                <Badge variant="outline" className="text-xs">You</Badge>
-                                            )}
+                                            <div className="text-right">
+                                                {isCircleActive ? (
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {isCurrentWinner && (
+                                                            <span className="text-purple-400 text-sm font-medium flex items-center gap-1">
+                                                                <Award className="h-3 w-3" />
+                                                                Receiving payout
+                                                            </span>
+                                                        )}
+                                                        {hasReceivedPayout && !isCurrentWinner && (
+                                                            <span className="text-green-400 text-sm flex items-center gap-1">
+                                                                <CheckCircle className="h-3 w-3" />
+                                                                Received
+                                                            </span>
+                                                        )}
+                                                        {isUpcoming && (
+                                                            <span className="text-slate-400 text-sm">
+                                                                Round {payoutOrder.findIndex(addr => addr === member) + 1}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-400 text-sm">
+                                                        Position {index + 1}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="text-slate-400 text-sm">
-                                            {payoutOrder && payoutOrder[index] === member && (
-                                                <span className="text-green-400">Next Payout</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </CardContent>
                     </Card>

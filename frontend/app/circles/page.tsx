@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, Clock, Users, TrendingUp, DollarSign, Plus, Shield } from "lucide-react"
+import { Search, Filter, Clock, Users, TrendingUp, DollarSign, Plus, Shield, Eye } from "lucide-react"
 import Link from "next/link"
 import { CircleState, SUPPORTED_TOKENS } from "@/lib/config"
 import { USDCMint } from "@/components/usdc-mint"
@@ -59,9 +59,8 @@ export default function CirclesPage() {
         const insuranceFee = parseUnits(circle.insuranceFee, SUPPORTED_TOKENS.USDC.decimals)
         const totalRequired = collateral + insuranceFee
 
-        // Start the unified join flow
-        toast.info(`Starting join process for ${Number(circle.contributionAmount) * circle.collateralFactor + Number(circle.insuranceFee)} USDC...`)
-        await startJoinFlow(BigInt(circleId), totalRequired)
+        // Start the unified join flow - toast will be shown by the hook
+        await startJoinFlow(BigInt(circleId), totalRequired, address)
     }
 
     // Use real circles data only
@@ -362,28 +361,40 @@ export default function CirclesPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Action Button */}
+                                                        {/* Action Buttons */}
                                                         {circle.state === CircleState.Open ? (
-                                                            <Button
-                                                                size="sm"
-                                                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
-                                                                onClick={(e) => handleJoinCircle(e, circle.id)}
-                                                                disabled={
-                                                                    isPending && currentCircleId === BigInt(circle.id)
-                                                                }
-                                                            >
-                                                                {isPending && currentCircleId === BigInt(circle.id) ? (
-                                                                    <div className="flex items-center justify-center space-x-2">
-                                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                                        <span>
-                                                                            {isApproving ? "Approving..." :
-                                                                                isJoining ? "Joining..." : "Processing..."}
-                                                                        </span>
-                                                                    </div>
-                                                                ) : (
-                                                                    "Join Circle"
-                                                                )}
-                                                            </Button>
+                                                            <div className="flex gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
+                                                                    onClick={(e) => handleJoinCircle(e, circle.id)}
+                                                                    disabled={
+                                                                        isPending && currentCircleId === BigInt(circle.id)
+                                                                    }
+                                                                >
+                                                                    {isPending && currentCircleId === BigInt(circle.id) ? (
+                                                                        <div className="flex items-center justify-center space-x-2">
+                                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                            <span>
+                                                                                {isApproving ? "Approving..." :
+                                                                                    isJoining ? "Joining..." : "Processing..."}
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        "Join Circle"
+                                                                    )}
+                                                                </Button>
+                                                                <Link href={`/circles/${circle.id}`}>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="border-primary/30 text-primary hover:bg-primary/10 hover:text-white"
+                                                                    >
+                                                                        <Eye className="w-3 h-3 mr-1" />
+                                                                        Details
+                                                                    </Button>
+                                                                </Link>
+                                                            </div>
                                                         ) : (
                                                             <Link href={`/circles/${circle.id}`}>
                                                                 <Button

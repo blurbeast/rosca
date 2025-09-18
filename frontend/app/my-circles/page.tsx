@@ -66,8 +66,12 @@ export default function MyCirclesPage() {
     // Calculate total contributions made (across all active/completed circles)
     const totalContributed = userCircles.reduce((sum, circle) => {
       if (circle.state === 1 || circle.state === 2) { // Active or completed
-        // User's contribution = contributionAmount * currentRound (rounds participated)
-        return sum + (parseFloat(circle.contributionAmount) * circle.currentRound);
+        // For active circles: estimate as (currentRound - 1) since current round might not be contributed yet
+        // For completed circles: assume all rounds contributed (maxMembers)
+        const contributedRounds = circle.state === 2
+          ? circle.maxMembers  // Completed: all rounds
+          : Math.max(0, circle.currentRound - 1); // Active: previous rounds only
+        return sum + (parseFloat(circle.contributionAmount) * contributedRounds);
       }
       return sum;
     }, 0);

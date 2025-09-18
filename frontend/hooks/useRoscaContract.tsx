@@ -373,65 +373,150 @@ export const useJoinCircle = () => {
     return { joinCircle, isPending, isConfirming, isConfirmed, hash };
 };
 
-// Unified hook for the complete join circle flow (approve + join)
+// Enhanced hook for the complete join circle flow with improved error handling
 export const useJoinCircleFlow = () => {
-    const [currentStep, setCurrentStep] = useState<'idle' | 'approving' | 'joining' | 'completed' | 'error'>('idle');
+    const [currentStep, setCurrentStep] = useState<'idle' | 'checking-allowance' | 'approving' | 'joining' | 'completed' | 'error'>('idle');
     const [currentCircleId, setCurrentCircleId] = useState<bigint | null>(null);
+    const [totalRequired, setTotalRequired] = useState<bigint>(BigInt(0));
 
-    const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending } = useWriteContract();
-    const { writeContract: writeJoin, data: joinHash, isPending: isJoinPending } = useWriteContract();
+    const { writeContract: writeApprove, data: approveHash, isPending: isApprovePending, reset: resetApprove } = useWriteContract();
+    const { writeContract: writeJoin, data: joinHash, isPending: isJoinPending, reset: resetJoin } = useWriteContract();
 
     const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed, error: approveError } =
         useWaitForTransactionReceipt({ hash: approveHash });
 
-    const { isLoading: isJoinConfirming, isSuccess: isJoinConfirmed, error: joinError } =
+    const { isLoading: isJoinConfirming, isSuccess: isJoinConfirmed, error: joinError, data: joinReceipt } =
         useWaitForTransactionReceipt({ hash: joinHash });
 
-    const startJoinFlow = useCallback(async (circleId: bigint, totalRequired: bigint) => {
-        try {
-            setCurrentStep('approving');
-            setCurrentCircleId(circleId);
+    // Function to check allowance for a specific user using read contract
+    const [userToCheck, setUserToCheck] = useState<`0x${string}` | null>(null);
 
-            // Step 1: Approve USDC spending
-            writeApprove({
-                address: SUPPORTED_TOKENS.USDC.address,
-                abi: [
-                    {
-                        type: "function",
-                        name: "approve",
-                        inputs: [
-                            { name: "spender", type: "address", internalType: "address" },
-                            { name: "value", type: "uint256", internalType: "uint256" },
-                        ],
-                        outputs: [{ name: "success", type: "bool", internalType: "bool" }],
-                        stateMutability: "nonpayable",
-                    },
-                ] as const,
-                functionName: 'approve',
-                args: [ROSCA_CONTRACT_ADDRESS, totalRequired],
-            });
-        } catch (error: any) {
-            toast.error(error.message, { position: "top-right" });
-            setCurrentStep('error');
-        }
-    }, [writeApprove]);
+    const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
+        address: SUPPORTED_TOKENS.USDC.address,
+        abi: [
+            {
+                type: "function",
+                name: "allowance",
+                inputs: [
+                    { name: "owner", type: "address", internalType: "address" },
+                    { name: "spender", type: "address", internalType: "address" },
+                ],
+                outputs: [{ name: "allowance", type: "uint256", internalType: "uint256" }],
+                stateMutability: "view",
+            },
+        ] as const,
+        functionName: 'allowance',
+        args: userToCheck ? [userToCheck, ROSCA_CONTRACT_ADDRESS] : ['0x0000000000000000000000000000000000000000', ROSCA_CONTRACT_ADDRESS],
+        query: { enabled: !!userToCheck }
+    });
 
-    const cancelFlow = useCallback(() => {
+    const resetFlow = useCallback(() => {
         setCurrentStep('idle');
         setCurrentCircleId(null);
-        toast.dismiss('join-flow');
-    }, []);
+        setTotalRequired(BigInt(0));
+        setUserToCheck(null);
+        resetApprove();
+        resetJoin();
+
+        // Clean up all join flow toasts
+        toast.dismiss("join-flow-checking");
+        toast.dismiss("join-flow-joining");
+        toast.dismiss("join-flow-approving");
+        toast.dismiss("join-flow-joining-after-approval");
+        toast.dismiss("join-flow-success");
+        toast.dismiss("join-flow-error");
+    }, [resetApprove, resetJoin]);
+
+    const startJoinFlow = useCallback(async (circleId: bigint, requiredAmount: bigint, userAddress: `0x${string}`) => {
+        try {
+            setCurrentStep('checking-allowance');
+            setCurrentCircleId(circleId);
+            setTotalRequired(requiredAmount);
+
+            toast.loading("Checking allowance...", {
+                id: "join-flow-checking",
+                position: "top-right",
+            });
+
+            // Set user to check allowance for and refetch
+            setUserToCheck(userAddress);
+            const allowanceData = await refetchAllowance();
+            const currentAllowanceAmount = allowanceData.data as bigint || BigInt(0);
+
+            if (currentAllowanceAmount >= requiredAmount) {
+                // Sufficient allowance, proceed directly to join
+                setCurrentStep('joining');
+                toast.loading("Joining circle...", {
+                    id: "join-flow-joining",
+                    position: "top-right",
+                });
+
+                console.log('Joining circle with sufficient allowance:', {
+                    circleId: circleId.toString(),
+                    userAddress,
+                    currentAllowance: currentAllowanceAmount.toString(),
+                    requiredAmount: requiredAmount.toString(),
+                    roscaContract: ROSCA_CONTRACT_ADDRESS
+                });
+
+                writeJoin({
+                    address: ROSCA_CONTRACT_ADDRESS,
+                    abi: RoscaSecureABI,
+                    functionName: 'joinCircle',
+                    args: [circleId],
+                });
+            } else {
+                // Need to approve first
+                setCurrentStep('approving');
+                toast.loading("Approving USDC spending...", {
+                    id: "join-flow-approving",
+                    position: "top-right",
+                });
+
+                writeApprove({
+                    address: SUPPORTED_TOKENS.USDC.address,
+                    abi: [
+                        {
+                            type: "function",
+                            name: "approve",
+                            inputs: [
+                                { name: "spender", type: "address", internalType: "address" },
+                                { name: "value", type: "uint256", internalType: "uint256" },
+                            ],
+                            outputs: [{ name: "success", type: "bool", internalType: "bool" }],
+                            stateMutability: "nonpayable",
+                        },
+                    ] as const,
+                    functionName: 'approve',
+                    args: [ROSCA_CONTRACT_ADDRESS, requiredAmount],
+                });
+            }
+        } catch (error: any) {
+            console.error('Join flow error:', error);
+            toast.error(error.message || "Failed to start join process", {
+                id: "join-flow-error",
+                position: "top-right"
+            });
+            setCurrentStep('error');
+            setTimeout(resetFlow, 3000);
+        }
+    }, [writeApprove, writeJoin, refetchAllowance, resetFlow]);
 
     // Handle approval confirmation
     useEffect(() => {
         if (isApproveConfirmed && currentStep === 'approving' && currentCircleId) {
             setCurrentStep('joining');
-            toast.success("Approval confirmed! Now joining circle...", {
-                id: "join-flow",
+            toast.loading("Approval confirmed! Joining circle...", {
+                id: "join-flow-joining-after-approval",
                 position: "top-right",
             });
 
             // Step 2: Join circle
+            console.log('Attempting to join circle after approval:', {
+                circleId: currentCircleId?.toString(),
+                roscaContract: ROSCA_CONTRACT_ADDRESS
+            });
+
             writeJoin({
                 address: ROSCA_CONTRACT_ADDRESS,
                 abi: RoscaSecureABI,
@@ -445,73 +530,89 @@ export const useJoinCircleFlow = () => {
     useEffect(() => {
         if (isJoinConfirmed && currentStep === 'joining') {
             setCurrentStep('completed');
+            // Clear any existing loading toasts first
+            toast.dismiss("join-flow-checking");
+            toast.dismiss("join-flow-joining");
+            toast.dismiss("join-flow-approving");
+            toast.dismiss("join-flow-joining-after-approval");
+
             toast.success("Successfully joined circle!", {
-                id: "join-flow",
+                id: "join-flow-success",
                 position: "top-right",
             });
             // Reset after a brief delay
-            setTimeout(() => {
-                setCurrentStep('idle');
-                setCurrentCircleId(null);
-            }, 2000);
+            setTimeout(resetFlow, 2000);
         }
-    }, [isJoinConfirmed, currentStep]);
+    }, [isJoinConfirmed, currentStep, resetFlow]);
 
-    // Handle errors
+    // Handle approval errors
     useEffect(() => {
         if (approveError && currentStep === 'approving') {
-            toast.error((approveError as BaseError).shortMessage || approveError.message, {
-                id: "join-flow",
+            console.error('Approval error:', approveError);
+            const errorMessage = (approveError as BaseError).shortMessage ||
+                                 (approveError as BaseError).message ||
+                                 "Transaction failed";
+
+            // Clear any existing loading toasts first
+            toast.dismiss("join-flow-checking");
+            toast.dismiss("join-flow-approving");
+
+            toast.error(`Approval failed: ${errorMessage}`, {
+                id: "join-flow-error",
                 position: "top-right",
             });
             setCurrentStep('error');
-            setTimeout(() => {
-                setCurrentStep('idle');
-                setCurrentCircleId(null);
-            }, 3000);
+            setTimeout(resetFlow, 3000);
         }
-    }, [approveError, currentStep]);
+    }, [approveError, currentStep, resetFlow]);
 
+    // Handle join errors and failed transactions
     useEffect(() => {
         if (joinError && currentStep === 'joining') {
-            toast.error((joinError as BaseError).shortMessage || joinError.message, {
-                id: "join-flow",
+            console.error('Join error:', joinError);
+            const errorMessage = (joinError as BaseError).shortMessage ||
+                                 (joinError as BaseError).message ||
+                                 "Transaction failed";
+
+            // Clear any existing loading toasts first
+            toast.dismiss("join-flow-checking");
+            toast.dismiss("join-flow-joining");
+            toast.dismiss("join-flow-joining-after-approval");
+
+            toast.error(`Join failed: ${errorMessage}`, {
+                id: "join-flow-error",
                 position: "top-right",
             });
             setCurrentStep('error');
-            setTimeout(() => {
-                setCurrentStep('idle');
-                setCurrentCircleId(null);
-            }, 3000);
+            setTimeout(resetFlow, 3000);
         }
-    }, [joinError, currentStep]);
+    }, [joinError, currentStep, resetFlow]);
 
-    // Loading state toasts
+    // Handle failed transaction receipts (status = 0)
     useEffect(() => {
-        if (isApprovePending && currentStep === 'approving') {
-            toast.loading("Approving USDC spending...", {
-                id: "join-flow",
+        if (joinReceipt && joinReceipt.status === 'reverted' && currentStep === 'joining') {
+            console.error('Join transaction reverted:', joinReceipt);
+            // Clear any existing loading toasts first
+            toast.dismiss("join-flow-checking");
+            toast.dismiss("join-flow-joining");
+            toast.dismiss("join-flow-joining-after-approval");
+
+            toast.error('Join transaction failed - transaction was reverted', {
+                id: "join-flow-error",
                 position: "top-right",
             });
+            setCurrentStep('error');
+            setTimeout(resetFlow, 3000);
         }
-    }, [isApprovePending, currentStep]);
+    }, [joinReceipt, currentStep, resetFlow]);
 
-    useEffect(() => {
-        if (isJoinPending && currentStep === 'joining') {
-            toast.loading("Joining circle...", {
-                id: "join-flow",
-                position: "top-right",
-            });
-        }
-    }, [isJoinPending, currentStep]);
-
-    const isPending = currentStep !== 'idle' && currentStep !== 'completed';
-    const isApproving = currentStep === 'approving' && (isApprovePending || isApproveConfirming);
-    const isJoining = currentStep === 'joining' && (isJoinPending || isJoinConfirming);
+    const isPending = !['idle', 'completed', 'error'].includes(currentStep);
+    const isApproving = currentStep === 'approving' || (currentStep === 'checking-allowance');
+    const isJoining = currentStep === 'joining';
 
     return {
         startJoinFlow,
-        cancelFlow,
+        resetFlow,
         currentStep,
         currentCircleId,
         isPending,
