@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCircleData, useMemberData, usePendingPayout, useJoinCircleFlow, useContribute, useClaimPayout, useFinalizeRound, useWithdrawCollateral } from '@/hooks/useRoscaContract';
+import { useCircleData, useMemberData, usePendingPayout, useJoinCircleFlow, useContributeFlow, useClaimPayout, useFinalizeRound, useWithdrawCollateral } from '@/hooks/useRoscaContract';
 import { useCircleInfo, useCircleDetails, useCircleMembers } from '@/hooks/useCircleQueries';
 import { formatUnits } from 'viem';
 import { ArrowLeft, Users, AlertCircle, Clock, CheckCircle, XCircle, Timer, Award, TrendingUp } from 'lucide-react';
@@ -35,7 +35,13 @@ export default function CircleDetailsPage() {
 
     // Contract interaction hooks
     const { startJoinFlow, isPending: isJoining, currentStep } = useJoinCircleFlow();
-    const { contribute, isPending: isContributing } = useContribute();
+    const {
+        startContributeFlow,
+        proceedToContribute,
+        currentStep: contributeStep,
+        isPending: isContributing,
+        isApproveConfirmed
+    } = useContributeFlow();
     const { claimPayout, isPending: isClaiming } = useClaimPayout();
     const { finalizeRound, isPending: isFinalizing } = useFinalizeRound();
     const { withdrawCollateral, isPending: isWithdrawing } = useWithdrawCollateral();
@@ -168,6 +174,13 @@ export default function CircleDetailsPage() {
         }
     }, [roundExpired, isCircleActive, timeRemaining]);
 
+    // Auto-proceed to contribute after approval
+    useEffect(() => {
+        if (isApproveConfirmed && contributeStep === 'approving') {
+            proceedToContribute(circleId);
+        }
+    }, [isApproveConfirmed, contributeStep, proceedToContribute, circleId]);
+
     // Format time remaining
     const formatTimeRemaining = (seconds: number) => {
         if (seconds <= 0) return "Round Expired";
@@ -193,19 +206,80 @@ export default function CircleDetailsPage() {
         await startJoinFlow(circleId, totalRequired, address);
     };
 
-    const handleContribute = () => {
-        contribute(circleId);
+    const handleContribute = async () => {
+        if (!circleInfo || !address) {
+            toast.error("Please connect your wallet first", { position: "top-right" });
+            return;
+        }
+
+        if (!isMember) {
+            toast.info("You must be a member to contribute", { position: "top-right" });
+            return;
+        }
+
+        if (!isCircleActive) {
+            toast.info("Circle is not active yet", { position: "top-right" });
+            return;
+        }
+
+        if (hasContributedThisRound) {
+            toast.info("You have already contributed for this round", { position: "top-right" });
+            return;
+        }
+
+        const contributionAmount = circleInfo.contributionAmount;
+        await startContributeFlow(circleId, contributionAmount, address);
     };
 
     const handleClaimPayout = () => {
+        if (!address) {
+            toast.error("Please connect your wallet first", { position: "top-right" });
+            return;
+        }
+
+        if (!hasPendingPayout) {
+            toast.info("No pending payout available", { position: "top-right" });
+            return;
+        }
+
         claimPayout(circleId);
     };
 
     const handleFinalizeRound = () => {
+        if (!address) {
+            toast.error("Please connect your wallet first", { position: "top-right" });
+            return;
+        }
+
+        if (!isCircleActive) {
+            toast.info("Circle is not active", { position: "top-right" });
+            return;
+        }
+
+        if (!roundExpired) {
+            toast.info("Round has not expired yet", { position: "top-right" });
+            return;
+        }
+
         finalizeRound(circleId);
     };
 
     const handleWithdrawCollateral = () => {
+        if (!address) {
+            toast.error("Please connect your wallet first", { position: "top-right" });
+            return;
+        }
+
+        if (!isMember) {
+            toast.info("You must be a member to withdraw collateral", { position: "top-right" });
+            return;
+        }
+
+        if (!canWithdrawCollateral) {
+            toast.info("Collateral withdrawal not available yet", { position: "top-right" });
+            return;
+        }
+
         withdrawCollateral(circleId);
     };
 
@@ -492,61 +566,120 @@ export default function CircleDetailsPage() {
                 {/* Actions */}
                 <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle className="text-white">Actions</CardTitle>
+                        <CardTitle className="text-white">Available Actions</CardTitle>
+                        <CardDescription className="text-slate-400">
+                            All possible actions for this circle. Unavailable actions will show informative messages when clicked.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-wrap gap-4">
-                            {canJoin && (
-                                <Button
-                                    onClick={handleJoinCircle}
-                                    disabled={isJoining}
-                                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                                >
-                                    {currentStep === 'approving' ? 'Approving...' :
-                                        currentStep === 'joining' ? 'Joining...' : 'Join Circle'}
-                                </Button>
-                            )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {/* Join Circle */}
+                            <Button
+                                onClick={handleJoinCircle}
+                                disabled={isJoining || canJoin === false}
+                                className={`${canJoin
+                                    ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                                    : "bg-slate-600 text-slate-300 cursor-not-allowed"
+                                }`}
+                                variant={canJoin ? "default" : "secondary"}
+                            >
+                                {isJoining ? (
+                                    currentStep === 'approving' ? 'Approving...' :
+                                    currentStep === 'joining' ? 'Joining...' : 'Processing...'
+                                ) : 'Join Circle'}
+                            </Button>
 
-                            {canContribute && (
-                                <Button
-                                    onClick={handleContribute}
-                                    disabled={isContributing}
-                                    variant="outline"
-                                    className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                                >
-                                    {isContributing ? 'Contributing...' : 'Contribute'}
-                                </Button>
-                            )}
+                            {/* Contribute */}
+                            <Button
+                                onClick={handleContribute}
+                                disabled={isContributing || (canContribute === false && hasContributedThisRound)}
+                                variant={canContribute && !hasContributedThisRound ? "outline" : "secondary"}
+                                className={`${canContribute && !hasContributedThisRound
+                                    ? "border-green-500/30 text-green-400 hover:bg-green-500/10"
+                                    : "bg-slate-600 text-slate-300"
+                                }`}
+                            >
+                                {isContributing ? (
+                                    contributeStep === 'approving' ? 'Approving...' :
+                                    contributeStep === 'contributing' ? 'Contributing...' : 'Processing...'
+                                ) : 'Contribute'}
+                            </Button>
 
-                            {hasPendingPayout && (
-                                <Button
-                                    onClick={handleClaimPayout}
-                                    disabled={isClaiming}
-                                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                                >
-                                    {isClaiming ? 'Claiming...' : `Claim ${formatTokenAmount(pendingAmount || BigInt(0))}`}
-                                </Button>
-                            )}
+                            {/* Claim Payout */}
+                            <Button
+                                onClick={handleClaimPayout}
+                                disabled={isClaiming || !hasPendingPayout}
+                                variant={hasPendingPayout ? "default" : "secondary"}
+                                className={`${hasPendingPayout
+                                    ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                                    : "bg-slate-600 text-slate-300"
+                                }`}
+                            >
+                                {isClaiming ? 'Claiming...' :
+                                 hasPendingPayout ? `Claim ${formatTokenAmount(pendingAmount || BigInt(0))}` : 'Claim Payout'}
+                            </Button>
 
-                            {canFinalizeRound && (
-                                <Button
-                                    onClick={handleFinalizeRound}
-                                    disabled={isFinalizing}
-                                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-                                >
-                                    {isFinalizing ? 'Finalizing...' : 'Finalize Expired Round'}
-                                </Button>
-                            )}
+                            {/* Finalize Round */}
+                            <Button
+                                onClick={handleFinalizeRound}
+                                disabled={isFinalizing || !canFinalizeRound}
+                                variant={canFinalizeRound ? "default" : "secondary"}
+                                className={`${canFinalizeRound
+                                    ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                                    : "bg-slate-600 text-slate-300"
+                                }`}
+                            >
+                                {isFinalizing ? 'Finalizing...' : 'Finalize Round'}
+                            </Button>
 
-                            {canWithdrawCollateral && (
-                                <Button
-                                    onClick={handleWithdrawCollateral}
-                                    disabled={isWithdrawing}
-                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                                >
-                                    {isWithdrawing ? 'Withdrawing...' : 'Withdraw Collateral'}
-                                </Button>
-                            )}
+                            {/* Withdraw Collateral */}
+                            <Button
+                                onClick={handleWithdrawCollateral}
+                                disabled={isWithdrawing || !canWithdrawCollateral}
+                                variant={canWithdrawCollateral ? "default" : "secondary"}
+                                className={`${canWithdrawCollateral
+                                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                    : "bg-slate-600 text-slate-300"
+                                }`}
+                            >
+                                {isWithdrawing ? 'Withdrawing...' : 'Withdraw Collateral'}
+                            </Button>
+
+                            {/* View Details - Always available for navigation */}
+                            <Button
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                variant="outline"
+                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                            >
+                                Scroll to Top
+                            </Button>
+                        </div>
+
+                        {/* Status Indicators */}
+                        <div className="mt-4 p-3 bg-slate-700/30 rounded-lg">
+                            <h4 className="text-sm font-medium text-white mb-2">Action Status:</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${canJoin ? 'bg-green-400' : 'bg-slate-500'}`}></div>
+                                    <span className="text-slate-400">Join: {canJoin ? 'Available' : 'Not available'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${canContribute && !hasContributedThisRound ? 'bg-green-400' : 'bg-slate-500'}`}></div>
+                                    <span className="text-slate-400">Contribute: {canContribute && !hasContributedThisRound ? 'Available' : 'Not available'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${hasPendingPayout ? 'bg-green-400' : 'bg-slate-500'}`}></div>
+                                    <span className="text-slate-400">Claim: {hasPendingPayout ? 'Available' : 'Not available'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${canFinalizeRound ? 'bg-green-400' : 'bg-slate-500'}`}></div>
+                                    <span className="text-slate-400">Finalize: {canFinalizeRound ? 'Available' : 'Not available'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${canWithdrawCollateral ? 'bg-green-400' : 'bg-slate-500'}`}></div>
+                                    <span className="text-slate-400">Withdraw: {canWithdrawCollateral ? 'Available' : 'Not available'}</span>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

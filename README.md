@@ -146,7 +146,7 @@ forge test -vv
 ### 📋 Deployed Contracts
 
 **RoscaSecure Main Contract**
-- Address: [0x923107fe8A2547ad09eD9a645F327Ba1E17BF1a6](https://shannon-explorer.somnia.network/address/0x923107fe8A2547ad09eD9a645F327Ba1E17BF1a6)
+- Address: [0x0252983fAD6caC37Ca4BcdeF9f1f7DFe3960D041](https://shannon-explorer.somnia.network/address/0x0252983fAD6caC37Ca4BcdeF9f1f7DFe3960D041)
 - Description: Main RoscaSecure smart contract handling circle creation, member management, and payout distribution
 
 **Multicall3 Contract**

@@ -8,6 +8,7 @@ import {
     useReadContract,
     type BaseError,
 } from "wagmi";
+import { USDCABI } from '@/abi/USDCABI';
 
 // Hook for creating circles
 export const useCreateCircle = () => {
@@ -75,6 +76,116 @@ export const useCreateCircle = () => {
     return { createCircle, isPending, isConfirming, isConfirmed, hash };
 };
 
+// Enhanced contribute hook with approval flow
+export const useContributeFlow = () => {
+    const [currentStep, setCurrentStep] = useState<'idle' | 'approving' | 'contributing'>('idle');
+    const [userToCheck, setUserToCheck] = useState<`0x${string}` | null>(null);
+
+    const { data: hash, writeContract, isPending, reset } = useWriteContract();
+
+    // Get allowance for the user
+    const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
+        address: SUPPORTED_TOKENS.USDC.address,
+        abi: USDCABI,
+        functionName: 'allowance',
+        args: [userToCheck || '0x0', ROSCA_CONTRACT_ADDRESS],
+        query: {
+            enabled: !!userToCheck
+        }
+    });
+
+    // Approval transaction
+    const { data: approveHash, writeContract: writeApprove, isPending: isApprovePending } = useWriteContract();
+
+    // Contribute transaction
+    const { data: contributeHash, writeContract: writeContribute, isPending: isContributePending } = useWriteContract();
+
+    const { isLoading: isApproveConfirming, isSuccess: isApproveConfirmed } = useWaitForTransactionReceipt({ hash: approveHash });
+    const { isLoading: isContributeConfirming, isSuccess: isContributeConfirmed } = useWaitForTransactionReceipt({ hash: contributeHash });
+
+    const startContributeFlow = useCallback(async (circleId: bigint, contributionAmount: bigint, userAddress: `0x${string}`) => {
+        setUserToCheck(userAddress);
+        const allowanceData = await refetchAllowance();
+        const currentAllowanceAmount = allowanceData.data as bigint || BigInt(0);
+
+        if (currentAllowanceAmount >= contributionAmount) {
+            // Skip approval, go directly to contribute
+            setCurrentStep('contributing');
+            writeContribute({
+                address: ROSCA_CONTRACT_ADDRESS,
+                abi: RoscaSecureABI,
+                functionName: 'contribute',
+                args: [circleId],
+            });
+        } else {
+            // Need to approve first
+            setCurrentStep('approving');
+            writeApprove({
+                address: SUPPORTED_TOKENS.USDC.address,
+                abi: USDCABI,
+                functionName: 'approve',
+                args: [ROSCA_CONTRACT_ADDRESS, contributionAmount],
+            });
+        }
+    }, [writeApprove, writeContribute, refetchAllowance]);
+
+    const resetFlow = useCallback(() => {
+        setCurrentStep('idle');
+        setUserToCheck(null);
+        reset();
+    }, [reset]);
+
+    // Handle approval confirmation
+    useEffect(() => {
+        if (isApproveConfirmed && approveHash && currentStep === 'approving') {
+            toast.success("Approval successful! Now contributing...", {
+                id: `contribute-approve-${approveHash}`,
+                position: "top-right",
+            });
+            // Auto-proceed to contribute step - we'll need the circle info
+            // This will be handled by the component calling this hook
+        }
+    }, [isApproveConfirmed, approveHash, currentStep]);
+
+    // Handle contribute confirmation
+    useEffect(() => {
+        if (isContributeConfirmed && contributeHash) {
+            toast.success("Contribution successful!", {
+                id: `contribute-success-${contributeHash}`,
+                position: "top-right",
+            });
+            resetFlow();
+        }
+    }, [isContributeConfirmed, contributeHash, resetFlow]);
+
+    const proceedToContribute = useCallback((circleId: bigint) => {
+        if (currentStep === 'approving' && isApproveConfirmed) {
+            setCurrentStep('contributing');
+            writeContribute({
+                address: ROSCA_CONTRACT_ADDRESS,
+                abi: RoscaSecureABI,
+                functionName: 'contribute',
+                args: [circleId],
+            });
+        }
+    }, [currentStep, isApproveConfirmed, writeContribute]);
+
+    return {
+        startContributeFlow,
+        proceedToContribute,
+        resetFlow,
+        currentStep,
+        isPending: isApprovePending || isContributePending,
+        isApproveConfirming,
+        isContributeConfirming,
+        isApproveConfirmed,
+        isContributeConfirmed,
+        approveHash,
+        contributeHash
+    };
+};
+
+// Keep the old contribute hook for backward compatibility, but mark as deprecated
 export const useContribute = () => {
     const { data: hash, error, writeContract, isPending } = useWriteContract();
 
