@@ -150,7 +150,7 @@ forge test -vv
 - Description: Main RoscaSecure smart contract handling circle creation, member management, and payout distribution
 
 **Multicall3 Contract**
-- Address: [0x9c4DBb1c67CB07607eEcb0d4B933e45312d6b2b8](https://shannon-explorer.somnia.network/address/0x9c4DBb1c67CB07607eEcb0d4B933e45312d6b2b8)
+- Address: [0x841b8199E6d3Db3C6f264f6C2bd8848b3cA64223](https://shannon-explorer.somnia.network/address/0x841b8199E6d3Db3C6f264f6C2bd8848b3cA64223)
 - Description: Efficient batch contract calls for fetching multiple circle data
 
 **USDC Test Token**

@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu } from "lucide-react"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 const WalletConnect = dynamic(() => import("./wallet-connect").then((mod) => mod.WalletConnect), { ssr: false });
 
 
@@ -18,6 +19,8 @@ export function Header() {
     { name: "My Circles", href: "/my-circles" },
     { name: "Dashboard", href: "/dashboard" },
   ]
+
+  const path = usePathname()
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     // Only handle scroll for anchor links
@@ -52,7 +55,7 @@ export function Header() {
                 key={item.name}
                 href={item.href}
                 onClick={(e) => handleScroll(e, item.href)}
-                className="text-muted-foreground hover:text-foreground px-4 py-2 rounded-full font-medium transition-colors hover:bg-primary/10"
+                className={`text-muted-foreground hover:text-foreground px-4 py-2 rounded-full font-medium transition-colors hover:bg-primary/10 ${path == item.href ? "bg-primary/10" : null}`}
               >
                 {item.name}
               </Link>

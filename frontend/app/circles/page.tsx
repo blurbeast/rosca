@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Search, Filter, Clock, Users, TrendingUp, Shield, Eye, DollarSign, Plus } from "lucide-react"
+import { Search, Filter, Clock, Users, TrendingUp, DollarSign, Plus, Shield } from "lucide-react"
 import Link from "next/link"
 import { CircleState, SUPPORTED_TOKENS } from "@/lib/config"
 import { USDCMint } from "@/components/usdc-mint"
@@ -19,85 +19,6 @@ import { useAllCirclesMulticall } from "@/hooks/useCircleQueries"
 import { parseUnits } from "viem"
 import { useAccount } from "wagmi"
 
-// Mock circles data - replace with actual contract reads
-const mockCircles = [
-    {
-        id: 1,
-        name: "Monthly Savers Group",
-        description: "A group of professionals saving for emergency funds and investments.",
-        creator: "0x1234567890abcdef1234567890abcdef12345678",
-        token: SUPPORTED_TOKENS.USDC.address,
-        contributionAmount: "100",
-        periodDuration: 2592000, // 30 days
-        maxMembers: 10,
-        currentMembers: 7,
-        collateralFactor: 2,
-        insuranceFee: "5",
-        state: CircleState.Open,
-        totalPool: "1000",
-        nextRound: "2024-04-15",
-        successRate: 100,
-        createdAt: "2024-03-15",
-        views: 234,
-    },
-    {
-        id: 2,
-        name: "Weekly Builders Circle",
-        description: "Tech workers saving for equipment and professional development.",
-        creator: "0x2345678901abcdef2345678901abcdef23456789",
-        token: SUPPORTED_TOKENS.USDC.address,
-        contributionAmount: "50",
-        periodDuration: 604800, // 7 days
-        maxMembers: 8,
-        currentMembers: 8,
-        collateralFactor: 3,
-        insuranceFee: "3",
-        state: CircleState.Active,
-        totalPool: "400",
-        nextRound: "2024-04-10",
-        successRate: 98,
-        createdAt: "2024-02-20",
-        views: 456,
-    },
-    {
-        id: 3,
-        name: "Students Emergency Fund",
-        description: "College students pooling resources for unexpected expenses.",
-        creator: "0x3456789012abcdef3456789012abcdef34567890",
-        token: SUPPORTED_TOKENS.USDC.address,
-        contributionAmount: "25",
-        periodDuration: 1209600, // 14 days
-        maxMembers: 12,
-        currentMembers: 9,
-        collateralFactor: 1,
-        insuranceFee: "2",
-        state: CircleState.Open,
-        totalPool: "300",
-        nextRound: "2024-04-12",
-        successRate: 95,
-        createdAt: "2024-03-01",
-        views: 189,
-    },
-    {
-        id: 4,
-        name: "Startup Founders Circle",
-        description: "Entrepreneurs saving for business opportunities and growth.",
-        creator: "0x4567890123abcdef4567890123abcdef45678901",
-        token: SUPPORTED_TOKENS.USDC.address,
-        contributionAmount: "500",
-        periodDuration: 2592000, // 30 days
-        maxMembers: 5,
-        currentMembers: 5,
-        collateralFactor: 4,
-        insuranceFee: "25",
-        state: CircleState.Completed,
-        totalPool: "2500",
-        nextRound: "Completed",
-        successRate: 100,
-        createdAt: "2024-01-15",
-        views: 678,
-    },
-]
 
 export default function CirclesPage() {
     const [searchQuery, setSearchQuery] = useState("")
@@ -143,8 +64,8 @@ export default function CirclesPage() {
         await startJoinFlow(BigInt(circleId), totalRequired)
     }
 
-    // Use real circles data or fallback to mock data for development
-    const allCircles = contractCircles.length > 0 ? contractCircles : mockCircles
+    // Use real circles data only
+    const allCircles = contractCircles
 
     const filteredCircles = allCircles.filter((circle) => {
         const matchesSearch =
@@ -327,11 +248,37 @@ export default function CirclesPage() {
                                         <p className="text-muted-foreground text-sm">{circlesError ? String((circlesError as Error)?.message ?? circlesError) : ""}</p>
                                     </div>
                                 </div>
+                            ) : allCircles.length === 0 ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="text-center">
+                                        <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold text-foreground mb-2">No Circles Available Yet</h3>
+                                        <p className="text-muted-foreground mb-6">Be the first to create a savings circle and start building financial security with your community.</p>
+                                        <Link href="/create-circle">
+                                            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                                                <Plus className="w-4 h-4 mr-2" />
+                                                Create First Circle
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
                             ) : filteredCircles.length === 0 ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="text-center">
-                                        <p className="text-muted-foreground mb-2">No circles found</p>
-                                        <p className="text-sm text-muted-foreground">Try adjusting your filters or create a new circle</p>
+                                        <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-xl font-semibold text-foreground mb-2">No Circles Found</h3>
+                                        <p className="text-muted-foreground mb-6">No circles match your current search and filter criteria.</p>
+                                        <Button
+                                            onClick={() => {
+                                                setSearchQuery("");
+                                                setStatusFilter("all");
+                                                setSelectedToken("all");
+                                            }}
+                                            variant="outline"
+                                            className="border-primary/30 text-primary hover:bg-primary/10"
+                                        >
+                                            Clear Filters
+                                        </Button>
                                     </div>
                                 </div>
                             ) : (
