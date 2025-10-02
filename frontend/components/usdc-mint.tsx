@@ -47,7 +47,7 @@ export function USDCMint() {
         address: SUPPORTED_TOKENS.USDC.address,
         abi: USDCABI,
         functionName: "mint",
-        args: [amount],
+        args: [address, amount],
       });
     } catch (error) {
       console.error("Mint error:", error);

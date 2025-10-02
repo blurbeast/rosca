@@ -18,6 +18,7 @@ import { useJoinCircleFlow } from "@/hooks/useRoscaContract"
 import { useAllCirclesMulticall } from "@/hooks/useCircleQueries"
 import { parseUnits } from "viem"
 import { useAccount } from "wagmi"
+import { USDTMint } from "@/components/usdt-mint"
 
 
 export default function CirclesPage() {
@@ -26,20 +27,25 @@ export default function CirclesPage() {
     const [sortBy, setSortBy] = useState("newest")
     const [selectedToken, setSelectedToken] = useState("all")
     const { address } = useAccount()
+
+    const [token, setToken] = useState<string>(SUPPORTED_TOKENS.USDC.address)
     const {
         startJoinFlow,
         currentCircleId,
         isPending,
         isApproving,
         isJoining
-    } = useJoinCircleFlow()
+    } = useJoinCircleFlow(token)
+
 
     // Fetch all circles from the contract
     const { circles: contractCircles, isLoading: isLoadingCircles, error: circlesError } = useAllCirclesMulticall()
 
-    const handleJoinCircle = async (e: React.MouseEvent, circleId: number) => {
+    const handleJoinCircle = async (e: React.MouseEvent, circleId: number, token_address: string) => {
         e.preventDefault()
         e.stopPropagation()
+
+        setToken(token_address)
 
         if (!address) {
             toast.error("Please connect your wallet first")
@@ -131,6 +137,11 @@ export default function CirclesPage() {
                     {/* USDC Minting Section */}
                     <div className="mb-8">
                         <USDCMint />
+                    </div>
+
+                    {/* USDT Minting Section */}
+                    <div className="mb-8">
+                        <USDTMint />
                     </div>
 
                     {/* Search and Filters */}
@@ -367,7 +378,7 @@ export default function CirclesPage() {
                                                                 <Button
                                                                     size="sm"
                                                                     className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
-                                                                    onClick={(e) => handleJoinCircle(e, circle.id)}
+                                                                    onClick={(e) => handleJoinCircle(e, circle.id, circle.token)}
                                                                     disabled={
                                                                         isPending && currentCircleId === BigInt(circle.id)
                                                                     }

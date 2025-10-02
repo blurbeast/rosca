@@ -485,7 +485,7 @@ export const useJoinCircle = () => {
 };
 
 // Enhanced hook for the complete join circle flow with improved error handling
-export const useJoinCircleFlow = () => {
+export const useJoinCircleFlow = (token_address: string) => {
     const [currentStep, setCurrentStep] = useState<'idle' | 'checking-allowance' | 'approving' | 'joining' | 'completed' | 'error'>('idle');
     const [currentCircleId, setCurrentCircleId] = useState<bigint | null>(null);
     const [totalRequired, setTotalRequired] = useState<bigint>(BigInt(0));
@@ -503,7 +503,7 @@ export const useJoinCircleFlow = () => {
     const [userToCheck, setUserToCheck] = useState<`0x${string}` | null>(null);
 
     const { data: currentAllowance, refetch: refetchAllowance } = useReadContract({
-        address: SUPPORTED_TOKENS.USDC.address,
+        address: token_address as `0x${string}`,
         abi: [
             {
                 type: "function",
@@ -585,7 +585,7 @@ export const useJoinCircleFlow = () => {
                 });
 
                 writeApprove({
-                    address: SUPPORTED_TOKENS.USDC.address,
+                    address: token_address as `0x${string}`,
                     abi: [
                         {
                             type: "function",
@@ -661,8 +661,8 @@ export const useJoinCircleFlow = () => {
         if (approveError && currentStep === 'approving') {
             console.error('Approval error:', approveError);
             const errorMessage = (approveError as BaseError).shortMessage ||
-                                 (approveError as BaseError).message ||
-                                 "Transaction failed";
+                (approveError as BaseError).message ||
+                "Transaction failed";
 
             // Clear any existing loading toasts first
             toast.dismiss("join-flow-checking");
@@ -682,8 +682,8 @@ export const useJoinCircleFlow = () => {
         if (joinError && currentStep === 'joining') {
             console.error('Join error:', joinError);
             const errorMessage = (joinError as BaseError).shortMessage ||
-                                 (joinError as BaseError).message ||
-                                 "Transaction failed";
+                (joinError as BaseError).message ||
+                "Transaction failed";
 
             // Clear any existing loading toasts first
             toast.dismiss("join-flow-checking");
