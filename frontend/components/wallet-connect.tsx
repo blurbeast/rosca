@@ -7,15 +7,13 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { abbreviateHash } from '@/lib/utils';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { ChevronDown, LogOut, User, Wallet } from 'lucide-react';
-import Link from 'next/link';
+import { ChevronDown, LogOut, Wallet } from 'lucide-react';
 import { useAccount, useDisconnect, useBalance } from 'wagmi';
-import { somniaTestnet } from "viem/chains";
+import { base } from "viem/chains";
 import { useEffect, useState } from 'react';
 
 interface WalletConnectProps {
@@ -54,7 +52,7 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
         );
     }
 
-    const isSomniaNetwork = somniaTestnet.id;
+    const isBaseNetwork = base.id;
 
     const formatBalance = (balance: any) => {
         if (!balance) return '0.000';
@@ -115,8 +113,8 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                 account && address && isConnected ? (
                     <div className="flex items-center gap-3">
                         {/* Network Status */}
-                        <Badge className={isSomniaNetwork ? "bg-primary/20 text-primary text-sm" : "bg-yellow-500/20 text-yellow-500"}>
-                            {isSomniaNetwork ? "Somnia Testnet" : "Wrong Network"}
+                        <Badge className={isBaseNetwork ? "bg-primary/20 text-primary text-sm" : "bg-yellow-500/20 text-yellow-500"}>
+                            {isBaseNetwork ? "Base" : "Wrong Network"}
                         </Badge>
 
                         {/* Wallet Dropdown */}
@@ -134,7 +132,7 @@ export const WalletConnect = ({ isMobile = false, onDisconnect }: WalletConnectP
                                     </Avatar>
                                     <div className="flex flex-col items-center">
                                         <span className="text-sm text-white font-medium">{abbreviateHash(address)}</span>
-                                        <span className="text-xs text-muted-foreground">{formatBalance(balance)} STT</span>
+                                        <span className="text-xs text-muted-foreground">{formatBalance(balance)} ETH</span>
                                     </div>
                                     <ChevronDown className="w-4 h-4 text-white" />
                                 </Button>

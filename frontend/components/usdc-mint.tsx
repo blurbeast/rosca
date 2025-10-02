@@ -91,7 +91,7 @@ export function USDCMint() {
               Mint test USDC tokens to participate in savings circles
             </CardDescription>
             <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-              <p>Free test tokens for Somnia Testnet • No real value</p>
+              <p>Free test tokens for Base • No real value</p>
             </div>
           </div>
 

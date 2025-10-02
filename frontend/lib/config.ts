@@ -1,5 +1,5 @@
 export const config = {
-  chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 50312,
+  chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 8453,
   rpcUrl: process.env.NEXT_PUBLIC_RPC_URL as string,
   walletConnectProjectId: process.env
     .NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID as string,
@@ -17,10 +17,16 @@ export const MULTICALL3_ADDRESS = process.env
 // Note: Replace with actual Somnia Testnet token addresses when available
 export const SUPPORTED_TOKENS = {
   USDC: {
-    address: "0x8dc1e7C7e86568458D7c529f8C87aC8c39a576f1" as `0x${string}`, // Somnia Testnet USDC (placeholder)
+    address: "0x6b54e6ec75eEb7c6cD1889cD3cBB858E6734471D" as `0x${string}`, // Somnia Testnet USDC (placeholder)
     decimals: 6,
     symbol: "USDC",
-    name: "USD Coin",
+    name: "USDC Token",
+  },
+  USDT: {
+    address: "0x6c925BE58927c5eD7f907a8126BC6F733F87c3B0" as `0x${string}`, // Somnia Testnet USDC (placeholder)
+    decimals: 6,
+    symbol: "USDT",
+    name: "USDT Token",
   },
 } as const;
 

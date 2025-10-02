@@ -5,7 +5,7 @@ import { darkTheme, lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowki
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { ReactNode } from 'react';
-import { somniaTestnet } from 'viem/chains';
+import { base } from 'viem/chains';
 import { WagmiProvider } from 'wagmi';
 
 interface Web3ProviderProps {
@@ -24,7 +24,7 @@ export const Providers = ({ children }: Web3ProviderProps) => {
                             lightMode: lightTheme(),
                             darkMode: darkTheme(),
                         }}
-                        initialChain={somniaTestnet}
+                        initialChain={base}
                     >
                         {children}
                     </RainbowKitProvider>

@@ -2,17 +2,17 @@
 pragma solidity ^0.8.13;
 
 import {Script} from "forge-std/Script.sol";
-import {RoscaSecure} from "../src/Rosca.sol";
+import {USDTToken} from "../src/USDT.sol";
 
-contract RoscaSecureScript is Script {
-    RoscaSecure public rosca;
+contract USDTScript is Script {
+    USDTToken public usdt;
 
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
 
-        rosca = new RoscaSecure();
+        usdt = new USDTToken();
 
         vm.stopBroadcast();
     }
